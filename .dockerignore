@@ -1,0 +1,40 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Local data — never bake into the image
+db.sqlite3
+db.sqlite3-journal
+*.sqlite3
+staticfiles/
+media/
+
+# Material de diseño (fuente pesada, no runtime)
+stitch.zip
+branding/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Git / docs / scratch
+.git/
+.gitignore
+documentos_profesor/
+documentacion_tfg.docx
+*.docx
+*.exe
+*.log
+
+# Compose-specific runtime
+certbot/
+nginx/
+.env
+.env.*

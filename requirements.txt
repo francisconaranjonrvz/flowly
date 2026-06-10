@@ -1,0 +1,11 @@
+# Flowly — Python Dependencies
+# Pin major versions to avoid breaking changes; allow patch updates.
+
+Django>=6.0,<6.1                        # Current stable; supports Python 3.12–3.14
+django-environ>=0.12,<1.0                # Environment-based settings (.env, DATABASE_URL)
+
+# Production-only deps (safely no-op in dev under runserver)
+gunicorn>=23.0,<27.0                    # WSGI server for production
+whitenoise>=6.6,<7.0                    # Serve hashed static files from WSGI
+psycopg2-binary>=2.9,<3.0               # PostgreSQL driver
+Pillow>=10.4,<13.0                      # Image processing for User.avatar (ImageField)

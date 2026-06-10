@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+
+# Virtualenv
+.venv/
+venv/
+env/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/media/
+!/media/.gitkeep
+
+# Material de diseño (fuente pesada, no runtime — no se versiona ni despliega)
+/stitch.zip
+/branding/
+
+# Tailwind (artefacto generado en build; fuente = tailwind.config.js + input)
+/static/css/tailwind.build.css
+# Binario standalone de Tailwind para dev local (Windows/linux/mac)
+tailwindcss
+tailwindcss.exe
+
+# Lanzador de despliegue local (waitress, solo Windows; Railway usa gunicorn)
+serve_local.py
+
+# .env
+.env
+.env.local
+.env.production
+
+# certbot
+/certbot/
+
+documentos_profesor/*.exe
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
