@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{# Layout de la app autenticada: sidebar + topbar + main + bottom-nav móvil. #}
+
+{% block body %}
+{% include '_sidebar.html' %}
+
+<div class="md:pl-64 min-h-screen flex flex-col">
+    {% include '_topbar.html' %}
+    <main class="flex-1 min-w-0 pb-20 md:pb-0 {% block main_class %}p-4 md:p-6{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+{% include '_bottomnav.html' %}
+
+{# Heartbeat de presencia: mantiene last_seen fresco sin navegar #}
+<div hx-get="{% url 'presence-ping' %}" hx-trigger="every 40s" hx-swap="none" class="hidden" aria-hidden="true"></div>
+{% endblock %}

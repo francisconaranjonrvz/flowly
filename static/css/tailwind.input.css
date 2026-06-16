@@ -1,0 +1,5 @@
+/* Entrada de Tailwind para Flowly.
+   Sin @tailwind base: el reset/preflight vive en design-system.css y
+   preflight está desactivado en tailwind.config.js (capa additiva). */
+@tailwind components;
+@tailwind utilities;

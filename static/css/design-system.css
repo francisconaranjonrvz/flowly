@@ -1,0 +1,489 @@
+/* Variables globales y reset */
+
+/* Fuente de marca opcional (la activan los temas de organización vía --font-display) */
+@font-face {
+    font-family: 'PPGoshaSans';
+    src: url('../fonts/PPGoshaSans-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+
+    /* ============================================================
+       PRIMITIVOS DE MARCA (canales RGB: "R G B")
+       Un tenant (Paso 4) solo sobrescribe estos ~15 valores en
+       runtime y todo el resto se recalcula. El acento Flowly por
+       defecto es indigo #6366F1; NoSoloWebs (lime #d6ff00) es tema
+       de tenant, no el de Flowly.
+       ============================================================ */
+    --brand-accent:        99 102 241;   /* #6366F1 indigo-500 */
+    --brand-accent-hover:  129 140 248;  /* #818CF8 indigo-400 */
+    --brand-on-accent:     255 255 255;  /* texto sobre el acento */
+
+    --brand-success:       52 211 153;   /* #34d399 */
+    --brand-warning:       251 191 36;   /* #fbbf24 */
+    --brand-error:         248 113 113;  /* #f87171 */
+    --brand-error-hover:   239 94 94;    /* #ef5e5e */
+    --brand-on-error:      255 255 255;
+
+    /* Superficies + texto (tema oscuro = por defecto) */
+    --brand-bg-primary:    13 15 18;     /* #0d0f12 */
+    --brand-bg-secondary:  26 30 42;     /* #1a1e2a */
+    --brand-bg-tertiary:   34 40 64;     /* #222840 */
+    --brand-bg-hover:      39 44 66;     /* #272c42 */
+    --brand-bg-active:     45 51 80;     /* #2d3350 */
+    --brand-bg-elevated:   34 40 64;     /* #222840 */
+
+    /* Contraste validado con WCAG AA */
+    --brand-text-primary:   240 242 246; /* #f0f2f6 */
+    --brand-text-secondary: 168 175 191; /* #a8afbf */
+    --brand-text-tertiary:  148 157 173; /* #949dad */
+    --brand-text-disabled:  114 122 143; /* #727a8f */
+
+    /* Canal de superposición para bordes/scrollbar
+       (blanco en oscuro, tinta en claro) */
+    --brand-overlay:        255 255 255;
+
+    /* Sombra: color + intensidad por modo */
+    --shadow-color:         0 0 0;
+    --shadow-alpha-sm:      0.4;
+    --shadow-alpha-md:      0.5;
+    --shadow-alpha-lg:      0.6;
+
+    color-scheme: dark;
+
+
+    /* ============================================================
+       TOKENS SEMÁNTICOS (computados de los primitivos)
+       Los componentes consumen SOLO estos nombres, así que no
+       cambian al re-tematizar.
+       ============================================================ */
+    --color-bg-primary:    rgb(var(--brand-bg-primary));
+    --color-bg-secondary:  rgb(var(--brand-bg-secondary));
+    --color-bg-tertiary:   rgb(var(--brand-bg-tertiary));
+    --color-bg-hover:      rgb(var(--brand-bg-hover));
+    --color-bg-active:     rgb(var(--brand-bg-active));
+    --color-bg-elevated:   rgb(var(--brand-bg-elevated));
+
+    --color-text-primary:   rgb(var(--brand-text-primary));
+    --color-text-secondary: rgb(var(--brand-text-secondary));
+    --color-text-tertiary:  rgb(var(--brand-text-tertiary));
+    --color-text-disabled:  rgb(var(--brand-text-disabled));
+
+    --color-accent:         rgb(var(--brand-accent));
+    --color-accent-hover:   rgb(var(--brand-accent-hover));
+    --color-accent-subtle:  rgb(var(--brand-accent) / 0.12);
+    --color-on-accent:      rgb(var(--brand-on-accent));
+
+    --color-success:        rgb(var(--brand-success));
+    --color-success-subtle: rgb(var(--brand-success) / 0.12);
+    --color-warning:        rgb(var(--brand-warning));
+    --color-warning-subtle: rgb(var(--brand-warning) / 0.12);
+    --color-error:          rgb(var(--brand-error));
+    --color-error-hover:    rgb(var(--brand-error-hover));
+    --color-error-subtle:   rgb(var(--brand-error) / 0.12);
+    --color-on-error:       rgb(var(--brand-on-error));
+
+    --color-priority-none:   #444444;
+    --color-priority-low:    #34d399;
+    --color-priority-medium: #fbbf24;
+    --color-priority-high:   #f97316;
+    --color-priority-urgent: #ef4444;
+
+    --color-border:        rgb(var(--brand-overlay) / 0.12);
+    --color-border-hover:  rgb(var(--brand-overlay) / 0.2);
+    --color-border-focus:  var(--color-accent);
+
+    /* Superposiciones sutiles (sustituyen literales hardcoded) */
+    --overlay-faint:       rgb(var(--brand-overlay) / 0.02);
+    --overlay-subtle:      rgb(var(--brand-overlay) / 0.04);
+    --overlay-soft:        rgb(var(--brand-overlay) / 0.06);
+    --overlay-muted:       rgb(var(--brand-overlay) / 0.08);
+    --overlay-strong:      rgb(var(--brand-overlay) / 0.1);
+
+    --font-display:    'Space Grotesk', 'Inter', -apple-system, sans-serif;
+    --font-family:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono:       'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+    --text-xs:         0.75rem;     /* 12px */
+    --text-sm:         0.875rem;    /* 14px */
+    --text-base:       1rem;        /* 16px */
+    --text-lg:         1.125rem;    /* 18px */
+    --text-xl:         1.25rem;     /* 20px */
+    --text-2xl:        1.5rem;      /* 24px */
+    --text-3xl:        1.875rem;    /* 30px */
+    --text-4xl:        2.25rem;     /* 36px */
+
+    --font-weight-normal:    400;
+    --font-weight-medium:    500;
+    --font-weight-semibold:  600;
+    --font-weight-bold:      700;
+
+    --leading-tight:    1.2;
+    --leading-normal:   1.5;
+    --leading-relaxed:  1.75;
+
+    --tracking-tight:  -0.02em;
+    --tracking-normal:  0;
+    --tracking-wide:    0.05em;
+
+    --space-1:    0.25rem;   /*  4px */
+    --space-2:    0.5rem;    /*  8px */
+    --space-3:    0.75rem;   /* 12px */
+    --space-4:    1rem;      /* 16px */
+    --space-5:    1.25rem;   /* 20px */
+    --space-6:    1.5rem;    /* 24px */
+    --space-8:    2rem;      /* 32px */
+    --space-10:   2.5rem;    /* 40px */
+    --space-12:   3rem;      /* 48px */
+    --space-16:   4rem;      /* 64px */
+    --space-20:   5rem;      /* 80px */
+
+    --radius-sm:    4px;
+    --radius-md:    8px;
+    --radius-lg:    12px;
+    --radius-xl:    16px;
+    --radius-full:  9999px;
+
+    --transition-fast:    150ms ease-out;
+    --transition-normal:  250ms ease-out;
+    --transition-slow:    400ms ease-out;
+
+    --shadow-sm:   0 1px 3px rgb(var(--shadow-color) / var(--shadow-alpha-sm));
+    --shadow-md:   0 4px 12px rgb(var(--shadow-color) / var(--shadow-alpha-md));
+    --shadow-lg:   0 8px 24px rgb(var(--shadow-color) / var(--shadow-alpha-lg));
+
+    --z-base:      1;
+    --z-dropdown:  100;
+    --z-overlay:   150;
+    --z-modal:     200;
+    --z-toast:     300;
+    --z-drag:      400;
+
+    --column-width:    320px;
+    --column-gap:      var(--space-5);
+    --board-padding:   var(--space-8);
+}
+
+
+/* ============================================================
+   TEMA CLARO — solo redefine los primitivos de superficie/texto
+   /overlay/sombra. El acento (indigo) se mantiene en ambos modos.
+   Debe ir DESPUÉS de :root para ganar la cascada (misma
+   especificidad).
+   ============================================================ */
+[data-theme="light"] {
+    color-scheme: light;
+
+    --brand-bg-primary:    247 248 250;  /* #f7f8fa */
+    --brand-bg-secondary:  255 255 255;  /* #ffffff */
+    --brand-bg-tertiary:   241 243 247;  /* #f1f3f7 */
+    --brand-bg-hover:      237 239 244;  /* #edeff4 */
+    --brand-bg-active:     228 231 238;  /* #e4e7ee */
+    --brand-bg-elevated:   255 255 255;  /* #ffffff */
+
+    --brand-text-primary:   24 27 35;    /* #181b23 */
+    --brand-text-secondary: 71 79 95;    /* #474f5f */
+    --brand-text-tertiary:  107 114 130; /* #6b7282 */
+    --brand-text-disabled:  154 161 175; /* #9aa1af */
+
+    /* Bordes/scrollbar como tinta translúcida en claro */
+    --brand-overlay:        17 24 39;    /* #111827 */
+
+    /* Sombras mucho más suaves en claro */
+    --shadow-alpha-sm:      0.06;
+    --shadow-alpha-md:      0.10;
+    --shadow-alpha-lg:      0.16;
+}
+
+
+/* Reset */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    /* Reset de borde estilo Tailwind preflight (que está desactivado): sin
+       esto, las utilidades `border` solo fijan el ancho y border-style queda
+       en `none`, por lo que los bordes no se pintan. Width 0 por defecto +
+       estilo sólido + color de marca → las utilidades `border`/`border-*`
+       funcionan, y desaparece el borde inset nativo de inputs/selects. */
+    border-width: 0;
+    border-style: solid;
+    border-color: rgb(var(--outline-variant));
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Reserva el hueco de la barra de scroll para que el contenido alineado a
+       la derecha (acciones del topbar) no salte entre páginas con/sin scroll. */
+    scrollbar-gutter: stable;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--leading-normal);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-primary);
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+ul, ol {
+    list-style: none;
+}
+
+img, svg {
+    display: block;
+    max-width: 100%;
+}
+
+button, input, select, textarea {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    background: none;
+    cursor: pointer;
+    /* Sin `border: none`: rompía las utilidades `border`/`border-primary` en
+       botones (p.ej. el checkbox de subtareas). El borde lo controla la regla
+       `*` (width 0) + las utilidades Tailwind. */
+}
+
+/* Form-controls: sin fondo ni borde nativos; el aspecto lo dan las utilidades
+   (bg-surface-variant + focus ring). Se conserva la apariencia nativa del
+   <select> (flecha). */
+input, select, textarea {
+    background-color: transparent;
+    border-radius: var(--radius-md);
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+:focus {
+    outline: none;
+}
+
+/* Solo foco por teclado */
+:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+/* Oculta nodos con directivas Alpine hasta que Alpine inicializa */
+[x-cloak] { display: none !important; }
+
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text-primary);
+}
+
+h1 { font-size: var(--text-4xl); }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl);  }
+h5 { font-size: var(--text-lg);  }
+h6 { font-size: var(--text-base); }
+
+p {
+    color: var(--color-text-secondary);
+    line-height: var(--leading-normal);
+}
+
+small {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+}
+
+code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    padding: var(--space-1) var(--space-2);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-sm);
+}
+
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgb(var(--brand-overlay) / 0.1);
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--brand-overlay) / 0.18);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--brand-overlay) / 0.1) transparent;
+}
+
+
+/* ================================================================
+   SISTEMA DE MARCA/TEMA DEL APP-SHELL (Fase 1 — rediseño Stitch)
+   Tokens semánticos (canales "R G B") que consumen las utilidades
+   Tailwind (bg-surface-container, text-on-surface, bg-primary...).
+   4 variantes vía [data-brand] y [data-theme] en <html>:
+     :root                              -> Flowly claro (default)
+     [data-theme=dark]                  -> Flowly oscuro
+     [data-brand=nsw]                   -> NSW oscuro (default NSW)
+     [data-brand=nsw][data-theme=light] -> NSW claro
+   El orden importa (igualdad de especificidad -> gana el último).
+   ================================================================ */
+
+/* Flowly — CLARO (por defecto) */
+:root {
+    --surface:                237 240 245;  /* #edf0f5 página (gris claro, separa de las tarjetas) */
+    --surface-container-low:  245 247 250;  /* #f5f7fa columnas */
+    --surface-container:      253 254 255;  /* #fdfeff tarjetas (casi-blanco, sin blanco puro) */
+    --surface-container-high: 234 237 240;  /* #eaedf0 elevado/hover */
+    --surface-variant:        233 236 240;  /* #e9ecf0 chips/inputs */
+    --on-surface:             25 28 30;      /* #191c1e */
+    --on-surface-variant:     91 101 115;    /* #5b6573 */
+    --outline:                199 202 208;   /* #c7cad0 */
+    --outline-variant:        214 219 227;   /* #d6dbe3 (borde gris sutil visible) */
+    --primary:                99 102 241;    /* #6366f1 indigo (relleno) */
+    --accent-text:            79 70 229;     /* #4f46e5 indigo-600 (texto/enlaces) */
+    --on-primary:             255 255 255;
+    --primary-container:      99 102 241;
+    --success:                16 185 129;    /* #10b981 */
+    --warning:                245 158 11;    /* #f59e0b */
+    --error:                  239 68 68;     /* #ef4444 */
+    color-scheme: light;
+}
+
+/* Flowly — OSCURO */
+[data-theme="dark"] {
+    --surface:                11 19 38;      /* #0b1326 */
+    --surface-container-low:  19 27 46;      /* #131b2e */
+    --surface-container:      23 31 51;      /* #171f33 */
+    --surface-container-high: 34 42 61;      /* #222a3d */
+    --surface-variant:        45 52 73;      /* #2d3449 */
+    --on-surface:             218 226 253;   /* #dae2fd */
+    --on-surface-variant:     160 167 184;   /* #a0a7b8 */
+    --outline:                88 96 122;     /* #58607a */
+    --outline-variant:        42 52 80;      /* #2a3450 */
+    --primary:                129 140 248;   /* #818cf8 indigo-400 (relleno) */
+    --accent-text:            129 140 248;   /* #818cf8 (texto/enlaces sobre oscuro) */
+    --on-primary:             17 24 39;      /* texto oscuro sobre indigo claro */
+    --primary-container:      129 140 248;
+    --success:                52 211 153;
+    --warning:                251 191 36;
+    --error:                  248 113 113;
+    color-scheme: dark;
+}
+
+/* NSW — OSCURO (tema por defecto de NoSoloWebs) */
+[data-brand="nsw"] {
+    --surface:                29 29 29;      /* #1D1D1D */
+    --surface-container-low:  22 22 22;      /* #161616 columnas */
+    --surface-container:      38 38 38;      /* #262626 tarjetas */
+    --surface-container-high: 45 45 45;      /* #2d2d2d */
+    --surface-variant:        51 51 51;      /* #333333 chips */
+    --on-surface:             234 234 234;   /* #eaeaea */
+    --on-surface-variant:     156 156 156;   /* #9c9c9c */
+    --outline:                69 69 69;      /* #454545 */
+    --outline-variant:        51 51 51;      /* #333333 */
+    --primary:                214 255 0;     /* #D6FF00 lima (relleno) */
+    --accent-text:            214 255 0;     /* lima legible sobre #1d1d1d */
+    --on-primary:             10 10 10;      /* casi-negro sobre lima */
+    --primary-container:      214 255 0;
+    --success:                92 233 195;    /* #5ce9c3 verdiazul */
+    --warning:                206 155 89;    /* #ce9b59 naranja */
+    --error:                  248 113 113;
+    color-scheme: dark;
+}
+
+/* NSW — CLARO */
+[data-brand="nsw"][data-theme="light"] {
+    --surface:                234 234 234;   /* #EAEAEA */
+    --surface-container-low:  228 228 228;   /* #e4e4e4 columnas */
+    --surface-container:      252 252 252;   /* #fcfcfc tarjetas (sin blanco puro) */
+    --surface-container-high: 244 244 244;   /* #f4f4f4 */
+    --surface-variant:        226 226 226;   /* #e2e2e2 */
+    --on-surface:             29 29 29;      /* #1d1d1d */
+    --on-surface-variant:     90 90 90;      /* #5a5a5a */
+    --outline:                192 192 192;   /* #c0c0c0 */
+    --outline-variant:        205 205 205;   /* #cdcdcd (borde gris sutil visible) */
+    --primary:                214 255 0;     /* lima (relleno) */
+    --accent-text:            58 77 0;       /* #3a4d00 oliva legible sobre claro */
+    --on-primary:             10 10 10;      /* casi-negro sobre lima */
+    --primary-container:      214 255 0;
+    --success:                14 165 130;
+    --warning:                206 155 89;
+    --error:                  239 68 68;
+    color-scheme: light;
+}
+
+
+/* Iconos Material Symbols (cargados desde Google Fonts en base.html) */
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-variation-settings: 'opsz' 24;
+}
+
+/* Toggle de tema: sol en oscuro (→claro), luna en claro (→oscuro) */
+.theme-icon-sun, .theme-icon-moon { display: none; }
+[data-theme="dark"]  .theme-icon-sun  { display: inline-block; }
+[data-theme="light"] .theme-icon-moon { display: inline-block; }
+
+/* Scrollbar fino para los carriles del kanban */
+.kanban-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+.kanban-scroll::-webkit-scrollbar-thumb {
+    background: rgb(var(--on-surface-variant) / 0.3);
+    border-radius: 4px;
+}
+.kanban-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* Estados de drag & drop (gestionados por board.js) */
+.card.is-dragging { opacity: 0.4; }
+.column.is-dragging { opacity: 0.5; }
+.column__cards.is-drop-target {
+    background: rgb(var(--primary) / 0.06);
+    border-radius: 10px;
+}
+.drop-indicator {
+    height: 2px;
+    margin: 2px 4px;
+    background: rgb(var(--primary));
+    border-radius: 2px;
+}

@@ -1,0 +1,96 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-brand="{{ org_brand|default:'flowly' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    {% comment %}
+    Aplica marca y tema antes del primer paint para evitar parpadeo (FOUC).
+    Marca: la del usuario (renderizada en el server) manda; se cachea para
+    páginas anónimas. Modo: localStorage manda (última acción local: toggle del
+    topbar o "modo" de Perfil, ambos escriben localStorage), luego el modo
+    fijado en el servidor, luego la organización, luego el sistema. Un listener
+    `storage` sincroniza tema/marca entre pestañas en vivo. Solo se interpolan
+    enums controlados por el servidor.
+    {% endcomment %}
+    <script>
+        (function () {
+            try {
+                var el = document.documentElement;
+                var serverBrand = el.getAttribute('data-brand');
+                if (serverBrand) {
+                    try { localStorage.setItem('flowly-brand', serverBrand); } catch (e) {}
+                } else {
+                    var cachedBrand = null;
+                    try { cachedBrand = localStorage.getItem('flowly-brand'); } catch (e) {}
+                    if (cachedBrand) el.setAttribute('data-brand', cachedBrand);
+                }
+
+                var userMode = '{{ user_theme_mode }}';
+                var orgMode = '{{ org_theme_mode }}';
+                var system = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                var stored = null;
+                try { stored = localStorage.getItem('flowly-theme'); } catch (e) {}
+                var theme = stored
+                    || (userMode === 'light' || userMode === 'dark' ? userMode : '')
+                    || (orgMode === 'light' || orgMode === 'dark' ? orgMode : '')
+                    || system;
+                el.setAttribute('data-theme', theme);
+
+                window.addEventListener('storage', function (ev) {
+                    if (ev.key === 'flowly-theme' && ev.newValue) {
+                        document.documentElement.setAttribute('data-theme', ev.newValue);
+                    } else if (ev.key === 'flowly-brand' && ev.newValue) {
+                        document.documentElement.setAttribute('data-brand', ev.newValue);
+                    }
+                });
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+
+    <title>{% block title %}Flowly{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Mulish:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+    {% block extra_css %}{% endblock %}
+    {# Utilidades Tailwind al final para que ganen donde se usen #}
+    <link rel="stylesheet" href="{% static 'css/tailwind.build.css' %}">
+
+    {# Tema de la organización activa: sobrescribe primitivos en runtime #}
+    {% if org_theme_css %}<style id="org-theme">{{ org_theme_css }}</style>{% endif %}
+
+    {# Librerías de interacción (vendorizadas, sin CDN) #}
+    <script src="{% static 'js/vendor/htmx.min.js' %}" defer></script>
+    <script src="{% static 'js/vendor/alpine.min.js' %}" defer></script>
+</head>
+<body class="bg-background text-on-surface font-sans antialiased min-h-screen">
+
+    {% if messages %}
+    <div class="toast-host" id="toast-host">
+        {% for message in messages %}
+        <div class="toast toast--{{ message.tags }} is-visible" role="status">{{ message }}</div>
+        {% endfor %}
+    </div>
+    <script>
+    setTimeout(function() {
+        document.querySelectorAll('.toast').forEach(function(t) {
+            t.classList.remove('is-visible');
+            setTimeout(function() { t.remove(); }, 300);
+        });
+    }, 3500);
+    </script>
+    {% endif %}
+
+    {% block body %}{% endblock %}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

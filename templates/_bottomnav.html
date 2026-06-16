@@ -1,0 +1,17 @@
+{% comment %} Navegación inferior (solo móvil). {% endcomment %}
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-40 h-16 bg-surface-container/90 backdrop-blur-xl border-t border-outline-variant flex items-center justify-around px-2">
+    {% with base='flex flex-col items-center justify-center gap-0.5 flex-1 py-1 text-[11px] font-display transition-colors' %}
+    <a href="{% url 'home' %}" class="{{ base }} {% if active_section == 'tableros' %}text-accent{% else %}text-on-surface-variant{% endif %}">
+        <span class="material-symbols-outlined text-[22px]">dashboard</span> Tableros
+    </a>
+    <a href="{% url 'calendario' %}" class="{{ base }} {% if active_section == 'calendario' %}text-accent{% else %}text-on-surface-variant{% endif %}">
+        <span class="material-symbols-outlined text-[22px]">calendar_today</span> Calendario
+    </a>
+    <a href="{% url 'equipo' %}" class="{{ base }} {% if active_section == 'equipo' %}text-accent{% else %}text-on-surface-variant{% endif %}">
+        <span class="material-symbols-outlined text-[22px]">groups</span> Equipo
+    </a>
+    <a href="{% url 'perfil' %}" class="{{ base }} {% if active_section == 'perfil' %}text-accent{% else %}text-on-surface-variant{% endif %}">
+        <span class="material-symbols-outlined text-[22px]">account_circle</span> Perfil
+    </a>
+    {% endwith %}
+</nav>

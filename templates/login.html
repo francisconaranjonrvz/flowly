@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Flowly — Iniciar sesión{% endblock %}
+
+{% block body %}
+<main class="auth">
+    <div class="auth__card">
+        <div class="auth__brand">Flowly</div>
+        <h1 class="auth__title">Iniciar sesión</h1>
+        <p class="auth__subtitle">Accede a tus tableros y continúa donde lo dejaste.</p>
+
+        {% if form.errors %}
+        <div class="auth__error is-visible">
+            Usuario o contraseña incorrectos.
+        </div>
+        {% endif %}
+
+        <form class="auth__form" method="post">
+            {% csrf_token %}
+            <div class="auth__field">
+                <label class="auth__label" for="id_username">Usuario</label>
+                <input class="auth__input" id="id_username" name="username" type="text"
+                       autocomplete="username" required autofocus
+                       value="{{ form.username.value|default_if_none:'' }}">
+            </div>
+            <div class="auth__field">
+                <label class="auth__label" for="id_password">Contraseña</label>
+                <input class="auth__input" id="id_password" name="password" type="password"
+                       autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="auth__submit">Entrar</button>
+        </form>
+
+        <p class="auth__footer">¿No tienes cuenta? <a href="{% url 'register' %}">Regístrate</a></p>
+    </div>
+</main>
+{% endblock %}

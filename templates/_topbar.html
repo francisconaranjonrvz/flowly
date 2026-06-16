@@ -1,0 +1,99 @@
+{% comment %} Barra superior: marca móvil + buscador + acciones. {% endcomment %}
+<header class="sticky top-0 z-30 h-16 flex items-center gap-3 px-4 md:px-6 bg-background/80 backdrop-blur-xl border-b border-outline-variant">
+
+    {# Marca (solo móvil; en escritorio está la sidebar) #}
+    <a href="{% url 'home' %}" class="md:hidden flex items-center gap-2 font-display font-bold text-on-surface">
+        <span class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center">
+            <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">deployed_code</span>
+        </span>
+        Flowly
+    </a>
+
+    {# Buscador (escritorio) con autocompletar #}
+    <form method="get" action="{% url 'buscar' %}" class="hidden md:flex flex-1 max-w-md"
+          x-data="{ sopen: false, q: '' }" @click.outside="sopen = false"
+          @keydown.window="if ($event.key === '/' && !['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) { $event.preventDefault(); $refs.q.focus(); }"
+          @keydown.escape="sopen = false">
+        <div class="relative w-full">
+            <span class="material-symbols-outlined absolute left-3 inset-y-0 flex items-center leading-none pointer-events-none text-on-surface-variant text-[20px]">search</span>
+            <input type="search" name="q" x-ref="q" value="{{ request.GET.q|default:'' }}" autocomplete="off"
+                   placeholder="Buscar tareas, tableros…  ( / )"
+                   hx-get="{% url 'search-suggest' %}" hx-trigger="keyup changed delay:250ms" hx-target="#search-suggest" hx-swap="innerHTML"
+                   @input="q = $event.target.value" @focus="sopen = true"
+                   class="w-full h-10 pl-10 pr-4 rounded-lg bg-surface-variant text-on-surface text-sm placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary transition-colors">
+            <div id="search-suggest" x-show="sopen && q.length > 0" x-cloak
+                 class="absolute left-0 right-0 top-full mt-1 max-h-96 overflow-y-auto rounded-lg bg-surface-container border border-outline-variant shadow-lift z-50"></div>
+        </div>
+    </form>
+
+    {# Acciones #}
+    <div class="flex items-center gap-1 md:gap-2 ml-auto">
+
+        {# Cambiar tema #}
+        <button type="button" title="Cambiar tema" aria-label="Cambiar tema"
+                class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors"
+                x-data="{ toggle() { const el=document.documentElement; const next=el.getAttribute('data-theme')==='light'?'dark':'light'; el.setAttribute('data-theme', next); try{localStorage.setItem('flowly-theme', next)}catch(e){} } }"
+                @click="toggle()">
+            <span class="material-symbols-outlined theme-icon-sun">light_mode</span>
+            <span class="material-symbols-outlined theme-icon-moon">dark_mode</span>
+        </button>
+
+        {# Notificaciones #}
+        <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false">
+            <button type="button" aria-label="Notificaciones" @click="open = !open"
+                    hx-get="{% url 'notifications-dropdown' %}" hx-target="#notif-panel" hx-trigger="click"
+                    class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors relative">
+                <span class="material-symbols-outlined">notifications</span>
+                {% include 'partials/_notif_badge.html' %}
+            </button>
+            <div id="notif-panel" x-show="open" @click.outside="open = false" x-cloak
+                 class="absolute right-0 mt-2 w-80 rounded-lg bg-surface-container border border-outline-variant shadow-lift z-50 overflow-hidden">
+                <div class="px-3 py-6 text-center text-xs text-on-surface-variant">Cargando…</div>
+            </div>
+        </div>
+
+        {# Menú de usuario (organización + perfil + salir) #}
+        <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false">
+            <button type="button" @click="open = !open"
+                    class="flex items-center gap-2 h-10 pl-1 pr-2 rounded-lg hover:bg-surface-variant transition-colors">
+                {% include 'partials/_avatar.html' with profile_user=request.user size='w-8 h-8 text-sm' only %}
+                <span class="material-symbols-outlined text-on-surface-variant text-[18px] hidden md:block">expand_more</span>
+            </button>
+
+            <div x-show="open" @click.outside="open = false" x-cloak
+                 class="absolute right-0 mt-2 w-60 rounded-lg bg-surface-container border border-outline-variant shadow-lift p-1 z-50">
+
+                <div class="px-3 py-2 border-b border-outline-variant mb-1">
+                    <p class="text-sm font-semibold text-on-surface truncate">{{ request.user.get_full_name_or_username }}</p>
+                    <p class="text-[11px] text-on-surface-variant truncate">{{ request.user.email|default:request.user.username }}</p>
+                </div>
+
+                {% if user_organizations|length > 1 %}
+                <p class="px-3 pt-1 pb-1 text-[10px] uppercase tracking-wider text-on-surface-variant font-display">Organización</p>
+                {% for org in user_organizations %}
+                <form method="post" action="{% url 'org-switch' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="organization" value="{{ org.id }}">
+                    <button type="submit"
+                            class="w-full text-left flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-surface-variant transition-colors {% if org.id == active_organization.id %}text-accent font-semibold{% else %}text-on-surface-variant{% endif %}">
+                        <span class="material-symbols-outlined text-[18px]">{% if org.id == active_organization.id %}check{% else %}corporate_fare{% endif %}</span>
+                        <span class="truncate">{{ org.name }}</span>
+                    </button>
+                </form>
+                {% endfor %}
+                <div class="border-t border-outline-variant my-1"></div>
+                {% endif %}
+
+                <a href="{% url 'perfil' %}" class="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">account_circle</span> Perfil
+                </a>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full text-left flex items-center gap-2 px-3 py-2 rounded-md text-sm text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">logout</span> Cerrar sesión
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>

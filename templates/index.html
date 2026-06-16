@@ -1,0 +1,103 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Mis tableros — Flowly{% endblock %}
+
+{% block content %}
+<div x-data="{ creating: {{ request.GET.nuevo|yesno:'true,false' }} }" class="max-w-6xl mx-auto">
+
+    {# Cabecera de página #}
+    <div class="flex items-end justify-between gap-4 mb-6">
+        <div>
+            <p class="font-display text-[11px] uppercase tracking-widest text-accent mb-1">{{ active_organization.name|default:'Flowly' }}</p>
+            <h1 class="font-display text-2xl md:text-3xl font-bold text-on-surface">Mis tableros</h1>
+        </div>
+        <button type="button" @click="creating = true; $nextTick(() => $refs.newName.focus())"
+                class="hidden sm:flex items-center gap-2 rounded-lg bg-primary text-on-primary font-display font-bold text-sm py-2.5 px-4 hover:opacity-90 active:scale-95 transition">
+            <span class="material-symbols-outlined text-[18px]">add</span> Nuevo proyecto
+        </button>
+    </div>
+
+    {# Resumen tipo dashboard #}
+    {% if summary %}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div class="rounded-xl bg-surface-container border border-outline-variant p-4">
+            <div class="flex items-center gap-2 text-on-surface-variant text-xs font-display uppercase tracking-wide mb-1">
+                <span class="material-symbols-outlined text-[16px]">dashboard</span>Proyectos
+            </div>
+            <div class="font-display text-2xl font-bold text-on-surface">{{ summary.boards }}</div>
+        </div>
+        <div class="rounded-xl bg-surface-container border border-outline-variant p-4">
+            <div class="flex items-center gap-2 text-on-surface-variant text-xs font-display uppercase tracking-wide mb-1">
+                <span class="material-symbols-outlined text-[16px]">task_alt</span>Tareas
+            </div>
+            <div class="font-display text-2xl font-bold text-on-surface">{{ summary.tasks }}</div>
+            <div class="text-[11px] text-on-surface-variant mt-0.5">{{ summary.mine }} asignadas a ti</div>
+        </div>
+        <div class="rounded-xl bg-surface-container border border-outline-variant p-4">
+            <div class="flex items-center gap-2 text-on-surface-variant text-xs font-display uppercase tracking-wide mb-1">
+                <span class="material-symbols-outlined text-[16px]">event_upcoming</span>Esta semana
+            </div>
+            <div class="font-display text-2xl font-bold text-on-surface">{{ summary.due_soon }}</div>
+            <div class="text-[11px] text-on-surface-variant mt-0.5">próximos 7 días</div>
+        </div>
+        <div class="rounded-xl border p-4 {% if summary.overdue %}bg-danger/10 border-danger/40{% else %}bg-surface-container border-outline-variant{% endif %}">
+            <div class="flex items-center gap-2 text-on-surface-variant text-xs font-display uppercase tracking-wide mb-1">
+                <span class="material-symbols-outlined text-[16px]">event_busy</span>Vencidas
+            </div>
+            <div class="font-display text-2xl font-bold {% if summary.overdue %}text-danger{% else %}text-on-surface{% endif %}">{{ summary.overdue }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Formulario de creación (Alpine) #}
+    <form method="post" action="{% url 'board-create' %}" x-show="creating" x-cloak
+          class="mb-6 rounded-xl bg-surface-container border border-outline-variant p-4 md:p-5">
+        {% csrf_token %}
+        <input x-ref="newName" type="text" name="name" required autocomplete="off"
+               placeholder="Nombre del proyecto..."
+               class="w-full bg-transparent border-none text-on-surface font-display text-lg font-semibold placeholder:text-on-surface-variant focus:outline-none mb-2">
+        <textarea name="description" rows="2" placeholder="Descripción (opcional)..."
+                  class="w-full bg-surface-variant rounded-lg p-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary resize-none"></textarea>
+        <div class="flex items-center gap-2 mt-3">
+            <button type="submit" class="rounded-lg bg-primary text-on-primary font-semibold text-sm py-2 px-4 hover:opacity-90 active:scale-95 transition">Crear proyecto</button>
+            <button type="button" @click="creating = false" class="rounded-lg text-on-surface-variant font-semibold text-sm py-2 px-4 hover:bg-surface-variant transition">Cancelar</button>
+        </div>
+    </form>
+
+    {# Rejilla de proyectos #}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for board in boards %}
+        <a href="{% url 'board-detail' board_id=board.id %}"
+           class="group relative block rounded-xl bg-surface-container border border-outline-variant p-5 hover:border-accent transition-colors">
+            <form method="post" action="{% url 'board-delete' board_id=board.id %}"
+                  class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onsubmit="event.stopPropagation(); return confirm('¿Eliminar &quot;{{ board.name }}&quot;? No se puede deshacer.');">
+                {% csrf_token %}
+                <button type="submit" onclick="event.stopPropagation();" aria-label="Eliminar tablero"
+                        class="w-7 h-7 rounded-md flex items-center justify-center text-on-surface-variant hover:text-danger hover:bg-surface-variant transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                </button>
+            </form>
+            <h2 class="font-display font-bold text-on-surface text-lg leading-tight mb-1 pr-7">{{ board.name }}</h2>
+            <p class="text-sm text-on-surface-variant line-clamp-2 mb-4 min-h-[2.5rem]">{{ board.description|default:"Sin descripción" }}</p>
+            <div class="flex items-center gap-4 text-xs text-on-surface-variant font-display">
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">view_column</span>{{ board.column_count }}</span>
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">task_alt</span>{{ board.card_count }}</span>
+            </div>
+        </a>
+        {% empty %}
+        {% endfor %}
+
+        {# Tarjeta "nuevo" inline en la rejilla #}
+        <button type="button" @click="creating = true; $nextTick(() => $refs.newName.focus())"
+                class="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-outline-variant p-5 min-h-[10rem] text-on-surface-variant hover:text-accent hover:border-accent transition-colors">
+            <span class="material-symbols-outlined text-[28px]">add</span>
+            <span class="font-display font-semibold text-sm">Nuevo proyecto</span>
+        </button>
+    </div>
+
+    {% if not boards %}
+    <p class="text-center text-on-surface-variant text-sm mt-8">Aún no tienes proyectos. Crea el primero arriba.</p>
+    {% endif %}
+</div>
+{% endblock %}
