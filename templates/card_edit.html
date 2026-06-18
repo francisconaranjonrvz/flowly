@@ -1,0 +1,164 @@
+{% extends 'base_app.html' %}
+
+{% block title %}{{ card.title }} — Flowly{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto" x-data>
+    {# ---- Migas de pan ---- #}
+    <div class="flex items-center gap-1.5 mb-4 text-[11px] font-display uppercase tracking-widest">
+        <a href="{% url 'home' %}" class="text-accent hover:underline">Mis tableros</a>
+        <span class="text-on-surface-variant">/</span>
+        <a href="{% url 'board-detail' board_id=board.id %}" class="text-accent hover:underline truncate">{{ board.name }}</a>
+        <span class="text-on-surface-variant">/ Tarea</span>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6 items-start">
+        {# ================= Columna principal ================= #}
+        <div class="lg:col-span-2 space-y-6">
+            {# ---- Formulario principal (título + descripción + meta) ---- #}
+            <form method="post" id="card-form" class="rounded-xl bg-surface-container border border-outline-variant p-5 md:p-6 space-y-5">
+                {% csrf_token %}
+
+                <div>
+                    <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5" for="id_title">Título</label>
+                    <input class="w-full bg-surface-variant rounded-lg px-3 py-2.5 text-on-surface text-lg font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
+                           id="id_title" type="text" name="title" value="{{ card.title }}" required>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5" for="id_description">Descripción</label>
+                    <textarea class="w-full bg-surface-variant rounded-lg px-3 py-2.5 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary resize-y"
+                              id="id_description" name="description" rows="5" placeholder="Añade más detalle...">{{ card.description }}</textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5" for="id_priority">Prioridad</label>
+                        <select name="priority" id="id_priority" class="w-full bg-surface-variant rounded-lg px-3 py-2.5 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                            <option value="0" {% if card.priority == 0 %}selected{% endif %}>Sin prioridad</option>
+                            <option value="1" {% if card.priority == 1 %}selected{% endif %}>Baja</option>
+                            <option value="2" {% if card.priority == 2 %}selected{% endif %}>Media</option>
+                            <option value="3" {% if card.priority == 3 %}selected{% endif %}>Alta</option>
+                            <option value="4" {% if card.priority == 4 %}selected{% endif %}>Urgente</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5" for="id_due_date">Fecha límite</label>
+                        <input class="w-full bg-surface-variant rounded-lg px-3 py-2.5 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                               id="id_due_date" type="date" name="due_date" value="{{ card.due_date|date:'Y-m-d'|default_if_none:'' }}">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5" for="id_column">Columna</label>
+                    <select name="column" id="id_column" class="w-full bg-surface-variant rounded-lg px-3 py-2.5 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                        {% for col in columns %}
+                        <option value="{{ col.id }}" {% if col.id == card.column_id %}selected{% endif %}>{{ col.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {% if labels %}
+                <div>
+                    <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5">Etiquetas</label>
+                    <div class="flex flex-wrap gap-2">
+                        {% for label in labels %}
+                        <label class="cursor-pointer text-xs font-display font-semibold px-3 py-1.5 rounded-full border transition-colors"
+                               x-data="{ on: {% if label.id in card_label_ids %}true{% else %}false{% endif %} }"
+                               :style="on ? 'background-color: {{ label.color }}26; color: {{ label.color }}; border-color: {{ label.color }}' : 'border-color: rgb(var(--outline-variant))'"
+                               :class="on ? '' : 'text-on-surface-variant'">
+                            <input type="checkbox" name="labels" value="{{ label.id }}" class="hidden"
+                                   {% if label.id in card_label_ids %}checked{% endif %} @change="on = $event.target.checked">
+                            {{ label.name }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if members %}
+                <div>
+                    <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5">Asignados</label>
+                    <div class="flex flex-wrap gap-2">
+                        {% for member in members %}
+                        <label class="cursor-pointer flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border transition-colors"
+                               x-data="{ on: {% if member.id in card_assignee_ids %}true{% else %}false{% endif %} }"
+                               :class="on ? 'border-primary bg-primary/10 text-on-surface' : 'border-outline-variant text-on-surface-variant'">
+                            <input type="checkbox" name="assignees" value="{{ member.id }}" class="hidden"
+                                   {% if member.id in card_assignee_ids %}checked{% endif %} @change="on = $event.target.checked">
+                            {% include 'partials/_avatar.html' with profile_user=member size='w-6 h-6 text-[10px]' only %}
+                            {{ member.get_full_name_or_username }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button class="rounded-lg bg-primary text-on-primary font-semibold text-sm py-2.5 px-5 hover:opacity-90 active:scale-95 transition" type="submit">Guardar cambios</button>
+                    <a href="{% url 'board-detail' board_id=board.id %}" class="rounded-lg text-on-surface-variant font-semibold text-sm py-2.5 px-5 hover:bg-surface-variant transition">Volver al tablero</a>
+                </div>
+            </form>
+
+            {# ---- Checklist (HTMX) ---- #}
+            <section class="rounded-xl bg-surface-container border border-outline-variant p-5 md:p-6">
+                {% include 'partials/_subtasks.html' %}
+            </section>
+
+            {# ---- Comentarios (HTMX) ---- #}
+            <section class="rounded-xl bg-surface-container border border-outline-variant p-5 md:p-6">
+                {% include 'partials/_comments.html' %}
+            </section>
+        </div>
+
+        {# ================= Barra lateral (resumen) ================= #}
+        <aside class="space-y-4 lg:sticky lg:top-20">
+            <div class="rounded-xl bg-surface-container border border-outline-variant p-5">
+                <h3 class="text-xs font-display uppercase tracking-wide text-on-surface-variant mb-4">Detalles</h3>
+                <dl class="space-y-4 text-sm">
+                    <div class="flex items-center justify-between gap-3">
+                        <dt class="text-on-surface-variant">Prioridad</dt>
+                        <dd>
+                            {% if card.priority == 4 %}<span class="text-[11px] font-display font-bold uppercase px-2 py-0.5 rounded bg-danger/15 text-danger">Urgente</span>
+                            {% elif card.priority == 3 %}<span class="text-[11px] font-display font-bold uppercase px-2 py-0.5 rounded bg-warning/15 text-warning">Alta</span>
+                            {% elif card.priority == 2 %}<span class="text-[11px] font-display font-bold uppercase px-2 py-0.5 rounded bg-primary/15 text-accent">Media</span>
+                            {% elif card.priority == 1 %}<span class="text-[11px] font-display font-bold uppercase px-2 py-0.5 rounded bg-success/15 text-success">Baja</span>
+                            {% else %}<span class="text-on-surface-variant">—</span>{% endif %}
+                        </dd>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                        <dt class="text-on-surface-variant">Fecha límite</dt>
+                        <dd class="font-mono {% if card.is_overdue %}text-danger{% else %}text-on-surface{% endif %}">
+                            {% if card.due_date %}{{ card.due_date|date:"j M Y" }}{% else %}—{% endif %}
+                        </dd>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                        <dt class="text-on-surface-variant">Progreso</dt>
+                        <dd class="font-mono text-on-surface">{{ card.subtask_done }}/{{ card.subtask_total }}</dd>
+                    </div>
+                    <div class="flex items-start justify-between gap-3">
+                        <dt class="text-on-surface-variant pt-1">Asignados</dt>
+                        <dd>
+                            {% if card.assignees.all %}
+                            <div class="flex -space-x-2">
+                                {% for member in card.assignees.all %}
+                                {% include 'partials/_avatar.html' with profile_user=member size='w-7 h-7 text-[10px]' ring='border-2 border-surface-container' only %}
+                                {% endfor %}
+                            </div>
+                            {% else %}<span class="text-on-surface-variant">Sin asignar</span>{% endif %}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+
+            <form method="post" action="{% url 'card-delete' board_id=board.id card_id=card.id %}"
+                  onsubmit="return confirm('¿Eliminar esta tarea?')">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center justify-center gap-2 rounded-lg border border-danger/40 text-danger text-sm font-semibold py-2.5 px-4 hover:bg-danger/10 transition">
+                    <span class="material-symbols-outlined text-[18px]">delete</span> Eliminar tarea
+                </button>
+            </form>
+        </aside>
+    </div>
+</div>
+{% endblock %}

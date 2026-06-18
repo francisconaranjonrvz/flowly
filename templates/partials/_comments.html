@@ -1,0 +1,53 @@
+{# Bloque de comentarios. Devuelto por HTMX. #}
+<div id="comments-block">
+    <div class="flex items-center justify-between mb-3">
+        <h3 class="text-xs font-display uppercase tracking-wide text-on-surface-variant">Comentarios</h3>
+        <span class="text-xs font-mono text-on-surface-variant">{{ comments|length }}</span>
+    </div>
+
+    <ul class="space-y-3 mb-4">
+        {% for comment in comments %}
+        <li class="group flex items-start gap-2.5">
+            {% if comment.author %}
+            {% include 'partials/_avatar.html' with profile_user=comment.author size='w-8 h-8 text-[11px]' only %}
+            {% else %}
+            <span class="shrink-0 w-8 h-8 rounded-full bg-surface-variant text-on-surface flex items-center justify-center text-[11px] font-display font-bold" title="Usuario eliminado">?</span>
+            {% endif %}
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-on-surface">{% if comment.author %}{{ comment.author.get_full_name_or_username }}{% else %}Usuario eliminado{% endif %}</span>
+                    <span class="text-[11px] font-mono text-on-surface-variant">{{ comment.created_at|date:"j M, H:i" }}</span>
+                    {% if comment.author_id == request.user.id or board.owner_id == request.user.id %}
+                    <button type="button"
+                            hx-post="{% url 'comment-delete' board_id=board.id card_id=card.id comment_id=comment.id %}"
+                            hx-target="#comments-block" hx-swap="outerHTML"
+                            hx-confirm="¿Eliminar este comentario?"
+                            class="ml-auto opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-danger transition"
+                            aria-label="Eliminar comentario">
+                        <span class="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-on-surface-variant whitespace-pre-wrap break-words mt-0.5">{{ comment.body }}</p>
+            </div>
+        </li>
+        {% empty %}
+        <li class="text-xs text-on-surface-variant">Sé el primero en comentar.</li>
+        {% endfor %}
+    </ul>
+
+    <form hx-post="{% url 'comment-create' board_id=board.id card_id=card.id %}"
+          hx-target="#comments-block" hx-swap="outerHTML"
+          hx-on::after-request="this.reset()"
+          class="flex items-start gap-2.5">
+        {% csrf_token %}
+        <span class="shrink-0 w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-[11px] font-display font-bold">{{ request.user.username|first|upper }}</span>
+        <div class="flex-1 min-w-0">
+            <textarea name="body" rows="2" placeholder="Escribe un comentario..." required
+                      class="w-full bg-surface-variant rounded-lg px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary resize-y"></textarea>
+            <div class="mt-2">
+                <button type="submit" class="rounded-lg bg-primary text-on-primary font-semibold text-xs py-2 px-4 hover:opacity-90 active:scale-95 transition">Comentar</button>
+            </div>
+        </div>
+    </form>
+</div>

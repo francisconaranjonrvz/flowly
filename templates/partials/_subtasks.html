@@ -1,0 +1,50 @@
+{# Bloque de checklist (subtareas) + barra de progreso. Devuelto por HTMX. #}
+<div id="subtasks-block">
+    <div class="flex items-center justify-between mb-2">
+        <h3 class="text-xs font-display uppercase tracking-wide text-on-surface-variant">Checklist</h3>
+        {% if card.subtask_total %}
+        <span class="text-xs font-mono text-on-surface-variant">{{ card.subtask_done }}/{{ card.subtask_total }}</span>
+        {% endif %}
+    </div>
+
+    {% if card.subtask_total %}
+    <div class="h-1.5 w-full rounded-full bg-surface-variant overflow-hidden mb-3">
+        <div class="h-full rounded-full bg-primary transition-all" style="width: {{ card.progress }}%;"></div>
+    </div>
+    {% endif %}
+
+    <ul class="space-y-1 mb-3">
+        {% for subtask in subtasks %}
+        <li class="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-variant transition-colors">
+            <button type="button"
+                    hx-post="{% url 'subtask-toggle' board_id=board.id card_id=card.id subtask_id=subtask.id %}"
+                    hx-target="#subtasks-block" hx-swap="outerHTML"
+                    class="shrink-0 w-5 h-5 rounded-md border flex items-center justify-center transition-colors
+                           {% if subtask.is_done %}bg-primary border-primary text-on-primary{% else %}border-outline text-transparent hover:border-primary{% endif %}"
+                    aria-label="{% if subtask.is_done %}Desmarcar{% else %}Marcar{% endif %}">
+                <span class="material-symbols-outlined text-[14px]">check</span>
+            </button>
+            <span class="flex-1 text-sm {% if subtask.is_done %}line-through text-on-surface-variant{% else %}text-on-surface{% endif %}">{{ subtask.title }}</span>
+            <button type="button"
+                    hx-post="{% url 'subtask-delete' board_id=board.id card_id=card.id subtask_id=subtask.id %}"
+                    hx-target="#subtasks-block" hx-swap="outerHTML"
+                    class="shrink-0 opacity-0 group-hover:opacity-100 w-6 h-6 rounded flex items-center justify-center text-on-surface-variant hover:text-danger transition"
+                    aria-label="Eliminar subtarea">
+                <span class="material-symbols-outlined text-[16px]">close</span>
+            </button>
+        </li>
+        {% empty %}
+        <li class="text-xs text-on-surface-variant px-2 py-1">Aún no hay subtareas.</li>
+        {% endfor %}
+    </ul>
+
+    <form hx-post="{% url 'subtask-create' board_id=board.id card_id=card.id %}"
+          hx-target="#subtasks-block" hx-swap="outerHTML"
+          hx-on::after-request="this.reset()"
+          class="flex items-center gap-2">
+        {% csrf_token %}
+        <input type="text" name="title" placeholder="Añadir subtarea..." required autocomplete="off"
+               class="flex-1 min-w-0 bg-surface-variant rounded-lg px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary">
+        <button type="submit" class="shrink-0 rounded-lg bg-primary text-on-primary font-semibold text-xs py-2 px-3 hover:opacity-90 active:scale-95 transition">Añadir</button>
+    </form>
+</div>
