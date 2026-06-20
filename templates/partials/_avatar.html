@@ -1,0 +1,15 @@
+{% comment %}
+Avatar reutilizable. Parámetros:
+  profile_user  — el User a mostrar (obligatorio).
+  size          — clases de tamaño + tipografía (p.ej. "w-8 h-8 text-sm").
+  ring          — clases opcionales de borde/anillo (p.ej. "border-2 border-background").
+Muestra <img> si el usuario tiene avatar; si no, las iniciales.
+{% endcomment %}
+{% if profile_user.avatar %}
+<img src="{{ profile_user.avatar.url }}" alt="{{ profile_user.get_full_name_or_username }}"
+     title="{{ profile_user.get_full_name_or_username }}"
+     class="{{ size }} {{ ring }} rounded-full object-cover bg-surface-variant shrink-0">
+{% else %}
+<span title="{{ profile_user.get_full_name_or_username }}"
+      class="{{ size }} {{ ring }} rounded-full bg-surface-variant text-on-surface flex items-center justify-center font-display font-bold shrink-0">{{ profile_user.username|first|upper }}</span>
+{% endif %}

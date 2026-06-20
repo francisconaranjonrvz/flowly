@@ -1,0 +1,72 @@
+{% extends 'base_app.html' %}
+
+{% block title %}{{ member_user.get_full_name_or_username }} — Equipo — Flowly{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <a href="{% url 'equipo' %}" class="inline-flex items-center gap-1 text-xs font-display uppercase tracking-widest text-accent hover:underline mb-4">
+        <span class="material-symbols-outlined text-[16px]">arrow_back</span> Equipo
+    </a>
+
+    {# Cabecera #}
+    <div class="rounded-xl bg-surface-container border border-outline-variant p-5 md:p-6 flex items-start gap-4 mb-4">
+        <div class="relative shrink-0">
+            {% include 'partials/_avatar.html' with profile_user=member_user size='w-16 h-16 text-2xl' only %}
+            <span class="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-surface-container
+                         {% if member_user.presence == 'online' %}bg-success{% elif member_user.presence == 'away' %}bg-warning{% else %}bg-outline{% endif %}"
+                  title="{{ member_user.presence }}"></span>
+        </div>
+        <div class="min-w-0 flex-1">
+            <h1 class="font-display text-xl md:text-2xl font-bold text-on-surface truncate">{{ member_user.get_full_name_or_username }}</h1>
+            <p class="text-sm text-on-surface-variant">{{ role }} · {{ member_user.get_status_state_display }}</p>
+            {% if member_user.status_message %}<p class="text-sm text-on-surface mt-1.5 italic">“{{ member_user.status_message }}”</p>{% endif %}
+            {% if member_user.bio %}<p class="text-sm text-on-surface-variant mt-2">{{ member_user.bio }}</p>{% endif %}
+        </div>
+    </div>
+
+    {# Carga + métricas #}
+    <div class="rounded-xl bg-surface-container border border-outline-variant p-5 mb-4">
+        <div class="flex items-center justify-between text-xs mb-1.5">
+            <span class="text-on-surface-variant font-display uppercase tracking-wide">Carga de trabajo</span>
+            <span class="font-mono {% if overloaded %}text-danger{% else %}text-on-surface-variant{% endif %}">{{ active_count }}/{{ capacity }} · {{ percent_raw }}%</span>
+        </div>
+        <div class="h-2 w-full rounded-full bg-surface-variant overflow-hidden">
+            <div class="h-full rounded-full transition-all {% if overloaded %}bg-danger{% elif percent >= 60 %}bg-warning{% else %}bg-primary{% endif %}" style="width: {{ percent }}%;"></div>
+        </div>
+        <div class="flex items-center gap-4 text-xs text-on-surface-variant mt-3">
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">task_alt</span>{{ active_count }} activas</span>
+            {% if overdue_count %}<span class="flex items-center gap-1 text-danger"><span class="material-symbols-outlined text-[15px]">event_busy</span>{{ overdue_count }} vencidas</span>{% endif %}
+        </div>
+        {% if areas %}
+        <div class="flex flex-wrap gap-1.5 mt-3">
+            {% for area in areas %}
+            <span class="text-[10px] font-display font-semibold px-2 py-0.5 rounded-full" style="background-color: {{ area.color }}26; color: {{ area.color }};">{{ area.name }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    {# Sus tareas #}
+    <h2 class="font-display font-bold uppercase tracking-wide text-xs text-on-surface-variant mb-2 px-1">Tareas asignadas</h2>
+    {% if tasks %}
+    <div class="rounded-xl border border-outline-variant divide-y divide-outline-variant overflow-hidden">
+        {% for card in tasks %}
+        <a href="{% url 'card-edit' board_id=card.column.board_id card_id=card.id %}" class="flex items-center gap-3 px-4 py-2.5 bg-surface-container hover:bg-surface-variant transition-colors">
+            {% if card.priority == 4 %}<span class="w-2 h-2 rounded-full bg-danger shrink-0"></span>
+            {% elif card.priority == 3 %}<span class="w-2 h-2 rounded-full bg-warning shrink-0"></span>
+            {% elif card.priority == 2 %}<span class="w-2 h-2 rounded-full bg-accent shrink-0"></span>
+            {% elif card.priority == 1 %}<span class="w-2 h-2 rounded-full bg-success shrink-0"></span>
+            {% else %}<span class="w-2 h-2 rounded-full bg-outline shrink-0"></span>{% endif %}
+            <span class="flex-1 min-w-0 text-sm text-on-surface truncate">{{ card.title }}</span>
+            <span class="hidden sm:inline text-[11px] text-on-surface-variant shrink-0">{{ card.column.board.name }}</span>
+            {% if card.due_date %}<span class="flex items-center gap-1 text-[11px] font-mono shrink-0 {% if card.is_overdue %}text-danger{% else %}text-on-surface-variant{% endif %}"><span class="material-symbols-outlined text-[14px]">event</span>{{ card.due_date|date:"j M" }}</span>{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12 rounded-xl border border-dashed border-outline-variant">
+        <p class="text-on-surface-variant text-sm">Sin tareas asignadas.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

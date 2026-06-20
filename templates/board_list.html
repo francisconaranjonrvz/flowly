@@ -1,0 +1,60 @@
+{% extends 'base_app.html' %}
+
+{% block title %}{{ board.name }} — Flowly{% endblock %}
+
+{% block content %}
+<div class="mb-5">{% include 'partials/_board_header.html' %}</div>
+
+<div class="space-y-6 max-w-5xl">
+    {% for column in columns %}
+    <section>
+        <div class="flex items-center gap-2 mb-2 px-1">
+            <h2 class="font-display font-bold uppercase tracking-wide text-xs text-on-surface-variant">{{ column.title }}</h2>
+            <span class="bg-surface-variant text-on-surface-variant text-[10px] font-bold px-2 py-0.5 rounded-full">{{ column.cards.count }}</span>
+        </div>
+        <div class="rounded-xl border border-outline-variant divide-y divide-outline-variant overflow-hidden">
+            {% for card in column.cards.all %}
+            <a href="{% url 'card-edit' board_id=board.id card_id=card.id %}"
+               class="flex items-center gap-3 px-4 py-2.5 bg-surface-container hover:bg-surface-variant transition-colors">
+                {% if card.priority == 4 %}<span class="w-2 h-2 rounded-full bg-danger shrink-0" title="Urgente"></span>
+                {% elif card.priority == 3 %}<span class="w-2 h-2 rounded-full bg-warning shrink-0" title="Alta"></span>
+                {% elif card.priority == 2 %}<span class="w-2 h-2 rounded-full bg-accent shrink-0" title="Media"></span>
+                {% elif card.priority == 1 %}<span class="w-2 h-2 rounded-full bg-success shrink-0" title="Baja"></span>
+                {% else %}<span class="w-2 h-2 rounded-full bg-outline shrink-0"></span>{% endif %}
+
+                <span class="flex-1 min-w-0 text-sm text-on-surface truncate">{{ card.title }}</span>
+
+                {% with lbl=card.labels.first %}
+                {% if lbl %}<span class="hidden md:inline font-display text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded shrink-0" style="background-color: {{ lbl.color }}26; color: {{ lbl.color }};">{{ lbl.name }}</span>{% endif %}
+                {% endwith %}
+
+                {% if card.subtask_total %}
+                <span class="hidden sm:flex items-center gap-1 text-[11px] font-mono text-on-surface-variant shrink-0">
+                    <span class="material-symbols-outlined text-[14px]">checklist</span>{{ card.subtask_done }}/{{ card.subtask_total }}
+                </span>
+                {% endif %}
+
+                {% if card.due_date %}
+                <span class="flex items-center gap-1 text-[11px] font-mono shrink-0 {% if card.is_overdue %}text-danger{% else %}text-on-surface-variant{% endif %}">
+                    <span class="material-symbols-outlined text-[14px]">event</span>{{ card.due_date|date:"j M" }}
+                </span>
+                {% endif %}
+
+                {% with assignees=card.assignees.all %}
+                {% if assignees %}
+                <div class="flex -space-x-2 shrink-0">
+                    {% for member in assignees|slice:":3" %}
+                    {% include 'partials/_avatar.html' with profile_user=member size='w-6 h-6 text-[10px]' ring='border-2 border-surface-container' only %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+            </a>
+            {% empty %}
+            <p class="px-4 py-3 text-xs text-on-surface-variant bg-surface-container">Sin tareas</p>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base_app.html' %}
+
+{% block title %}{{ board.name }} — Flowly{% endblock %}
+
+{% block content %}
+<div class="mb-5">{% include 'partials/_board_header.html' %}</div>
+
+<div class="rounded-xl border border-outline-variant overflow-hidden overflow-x-auto">
+    <table class="w-full text-sm border-collapse">
+        <thead>
+            <tr class="bg-surface-container-low text-on-surface-variant text-left">
+                {% comment %} Cabecera ordenable: alterna asc/desc al clicar. {% endcomment %}
+                <th class="font-display text-[11px] uppercase tracking-wide font-bold px-4 py-2.5">
+                    <a href="?view=table&sort={% if sort == 'title' %}-title{% else %}title{% endif %}" class="inline-flex items-center gap-1 hover:text-accent">
+                        Tarea
+                        {% if sort == 'title' %}<span class="material-symbols-outlined text-[14px]">arrow_upward</span>{% elif sort == '-title' %}<span class="material-symbols-outlined text-[14px]">arrow_downward</span>{% endif %}
+                    </a>
+                </th>
+                <th class="font-display text-[11px] uppercase tracking-wide font-bold px-4 py-2.5 hidden md:table-cell">Estado</th>
+                <th class="font-display text-[11px] uppercase tracking-wide font-bold px-4 py-2.5 hidden lg:table-cell">Asignados</th>
+                <th class="font-display text-[11px] uppercase tracking-wide font-bold px-4 py-2.5">
+                    <a href="?view=table&sort={% if sort == '-priority' %}priority{% else %}-priority{% endif %}" class="inline-flex items-center gap-1 hover:text-accent">
+                        Prioridad
+                        {% if sort == 'priority' %}<span class="material-symbols-outlined text-[14px]">arrow_upward</span>{% elif sort == '-priority' %}<span class="material-symbols-outlined text-[14px]">arrow_downward</span>{% endif %}
+                    </a>
+                </th>
+                <th class="font-display text-[11px] uppercase tracking-wide font-bold px-4 py-2.5 hidden sm:table-cell">
+                    <a href="?view=table&sort={% if sort == 'due_date' %}-due_date{% else %}due_date{% endif %}" class="inline-flex items-center gap-1 hover:text-accent">
+                        Vence
+                        {% if sort == 'due_date' %}<span class="material-symbols-outlined text-[14px]">arrow_upward</span>{% elif sort == '-due_date' %}<span class="material-symbols-outlined text-[14px]">arrow_downward</span>{% endif %}
+                    </a>
+                </th>
+                <th class="font-display text-[11px] uppercase tracking-wide font-bold px-4 py-2.5 hidden sm:table-cell">
+                    <a href="?view=table&sort={% if sort == '-progress' %}progress{% else %}-progress{% endif %}" class="inline-flex items-center gap-1 hover:text-accent">
+                        Progreso
+                        {% if sort == 'progress' %}<span class="material-symbols-outlined text-[14px]">arrow_upward</span>{% elif sort == '-progress' %}<span class="material-symbols-outlined text-[14px]">arrow_downward</span>{% endif %}
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant">
+            {% for card in cards %}
+            <tr class="bg-surface-container hover:bg-surface-variant transition-colors">
+                <td class="px-4 py-2.5">
+                    <a href="{% url 'card-edit' board_id=board.id card_id=card.id %}" class="flex items-center gap-2 text-on-surface hover:text-accent">
+                        {% with lbl=card.labels.first %}{% if lbl %}<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ lbl.color }};"></span>{% endif %}{% endwith %}
+                        <span class="truncate max-w-[18rem]">{{ card.title }}</span>
+                    </a>
+                </td>
+                <td class="px-4 py-2.5 hidden md:table-cell">
+                    <span class="text-[11px] font-display uppercase tracking-wide text-on-surface-variant">{{ card.column.title }}</span>
+                </td>
+                <td class="px-4 py-2.5 hidden lg:table-cell">
+                    {% with assignees=card.assignees.all %}
+                    {% if assignees %}
+                    <div class="flex -space-x-2">
+                        {% for member in assignees|slice:":3" %}
+                        {% include 'partials/_avatar.html' with profile_user=member size='w-6 h-6 text-[10px]' ring='border-2 border-surface-container' only %}
+                        {% endfor %}
+                    </div>
+                    {% else %}<span class="text-on-surface-variant text-xs">—</span>{% endif %}
+                    {% endwith %}
+                </td>
+                <td class="px-4 py-2.5">
+                    {% if card.priority == 4 %}<span class="text-[10px] font-display font-bold uppercase px-2 py-0.5 rounded bg-danger/15 text-danger">Urgente</span>
+                    {% elif card.priority == 3 %}<span class="text-[10px] font-display font-bold uppercase px-2 py-0.5 rounded bg-warning/15 text-warning">Alta</span>
+                    {% elif card.priority == 2 %}<span class="text-[10px] font-display font-bold uppercase px-2 py-0.5 rounded bg-primary/15 text-accent">Media</span>
+                    {% elif card.priority == 1 %}<span class="text-[10px] font-display font-bold uppercase px-2 py-0.5 rounded bg-success/15 text-success">Baja</span>
+                    {% else %}<span class="text-on-surface-variant text-xs">—</span>{% endif %}
+                </td>
+                <td class="px-4 py-2.5 hidden sm:table-cell font-mono text-[12px] {% if card.is_overdue %}text-danger{% else %}text-on-surface-variant{% endif %}">
+                    {% if card.due_date %}{{ card.due_date|date:"j M Y" }}{% else %}—{% endif %}
+                </td>
+                <td class="px-4 py-2.5 hidden sm:table-cell">
+                    {% if card.subtask_total %}
+                    <div class="flex items-center gap-2">
+                        <div class="h-1.5 w-16 rounded-full bg-surface-variant overflow-hidden">
+                            <div class="h-full rounded-full bg-primary" style="width: {{ card.progress }}%;"></div>
+                        </div>
+                        <span class="font-mono text-[11px] text-on-surface-variant">{{ card.progress }}%</span>
+                    </div>
+                    {% else %}<span class="text-on-surface-variant text-xs">—</span>{% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant bg-surface-container">Este tablero no tiene tareas.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

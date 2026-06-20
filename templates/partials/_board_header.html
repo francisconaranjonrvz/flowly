@@ -1,0 +1,80 @@
+{% comment %}
+Cabecera común de las vistas de un tablero: migas, título, avatares,
+contador y selector de vista (kanban/lista/tabla/calendario).
+Requiere: board, members, total_cards, current_view.
+{% endcomment %}
+<div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0">
+        <div class="flex items-center gap-1.5 mb-1 text-[11px] font-display uppercase tracking-widest">
+            <a href="{% url 'home' %}" class="text-accent hover:underline">Mis tableros</a>
+            <span class="text-on-surface-variant">/ {{ active_organization.name|default:'Flowly' }}</span>
+        </div>
+        <h1 class="font-display text-xl md:text-2xl font-bold text-on-surface truncate">{{ board.name }}</h1>
+    </div>
+
+    <div class="flex items-center gap-3 shrink-0">
+        <div class="hidden sm:flex -space-x-2">
+            {% for member in members|slice:":4" %}
+            {% include 'partials/_avatar.html' with profile_user=member size='w-8 h-8 text-[11px]' ring='border-2 border-background' only %}
+            {% endfor %}
+        </div>
+        <span class="hidden sm:inline-flex items-center gap-1.5 text-on-surface-variant text-sm">
+            <span class="material-symbols-outlined text-[18px]">task_alt</span>{{ total_cards }}
+        </span>
+
+        {# Chat del proyecto (slide-over) #}
+        <div x-data="{ chat: false }" @keydown.escape.window="chat = false">
+            <button type="button" @click="chat = !chat" title="Chat del proyecto" aria-label="Chat del proyecto"
+                    class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors">
+                <span class="material-symbols-outlined text-[20px]">forum</span>
+            </button>
+            <template x-if="chat">
+                <div class="fixed inset-0 z-50">
+                    <div class="absolute inset-0 bg-black/40" @click="chat = false"></div>
+                    <aside class="absolute right-0 top-0 h-full w-full max-w-md bg-surface-container border-l border-outline-variant flex flex-col shadow-lift">
+                        <header class="flex items-center justify-between px-4 h-14 border-b border-outline-variant shrink-0">
+                            <span class="font-display font-bold text-on-surface flex items-center gap-2 min-w-0">
+                                <span class="material-symbols-outlined text-[20px]">forum</span><span class="truncate">Chat · {{ board.name }}</span>
+                            </span>
+                            <button @click="chat = false" class="w-8 h-8 rounded-lg hover:bg-surface-variant flex items-center justify-center text-on-surface-variant shrink-0"><span class="material-symbols-outlined text-[20px]">close</span></button>
+                        </header>
+                        <div id="chat-messages" hx-get="{% url 'chat-messages' board_id=board.id %}" hx-trigger="load, every 4s"
+                             hx-swap="innerHTML" hx-on::after-settle="this.scrollTop = this.scrollHeight"
+                             class="flex-1 overflow-y-auto p-4 space-y-3">
+                            <p class="text-center text-xs text-on-surface-variant">Cargando…</p>
+                        </div>
+                        <form hx-post="{% url 'chat-send' board_id=board.id %}" hx-target="#chat-messages" hx-swap="innerHTML"
+                              hx-on::after-request="this.reset()" class="shrink-0 border-t border-outline-variant p-3 flex items-center gap-2">
+                            {% csrf_token %}
+                            <input type="text" name="body" required autocomplete="off" placeholder="Mensaje…  (@ para mencionar)"
+                                   class="flex-1 min-w-0 bg-surface-variant rounded-lg px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary">
+                            <button type="submit" class="shrink-0 w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center hover:opacity-90"><span class="material-symbols-outlined text-[18px]">send</span></button>
+                        </form>
+                    </aside>
+                </div>
+            </template>
+        </div>
+
+        {# Selector de vista #}
+        {% with vbase='w-8 h-8 rounded-md flex items-center justify-center transition-colors' %}
+        <div class="flex items-center gap-0.5 rounded-lg bg-surface-container-low border border-outline-variant p-0.5">
+            <a href="?view=kanban" title="Tablero" aria-label="Vista tablero"
+               class="{{ vbase }} {% if current_view == 'kanban' %}bg-surface-variant text-accent{% else %}text-on-surface-variant hover:text-on-surface{% endif %}">
+                <span class="material-symbols-outlined text-[19px]">view_kanban</span>
+            </a>
+            <a href="?view=list" title="Lista" aria-label="Vista lista"
+               class="{{ vbase }} {% if current_view == 'list' %}bg-surface-variant text-accent{% else %}text-on-surface-variant hover:text-on-surface{% endif %}">
+                <span class="material-symbols-outlined text-[19px]">view_list</span>
+            </a>
+            <a href="?view=table" title="Tabla" aria-label="Vista tabla"
+               class="{{ vbase }} {% if current_view == 'table' %}bg-surface-variant text-accent{% else %}text-on-surface-variant hover:text-on-surface{% endif %}">
+                <span class="material-symbols-outlined text-[19px]">table_rows</span>
+            </a>
+            <a href="?view=calendar" title="Calendario" aria-label="Vista calendario"
+               class="{{ vbase }} {% if current_view == 'calendar' %}bg-surface-variant text-accent{% else %}text-on-surface-variant hover:text-on-surface{% endif %}">
+                <span class="material-symbols-outlined text-[19px]">calendar_month</span>
+            </a>
+        </div>
+        {% endwith %}
+    </div>
+</div>

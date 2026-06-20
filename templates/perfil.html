@@ -1,0 +1,150 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Perfil — Flowly{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="font-display text-xl md:text-2xl font-bold text-on-surface mb-6">Mi perfil</h1>
+
+    <div class="grid lg:grid-cols-3 gap-6 items-start">
+        {# ---- Formulario de perfil ---- #}
+        <form method="post" enctype="multipart/form-data" class="lg:col-span-2 rounded-xl bg-surface-container border border-outline-variant p-5 md:p-6 space-y-5">
+            {% csrf_token %}
+
+            <div class="flex items-center gap-4">
+                {% include 'partials/_avatar.html' with profile_user=request.user size='w-16 h-16 text-2xl' only %}
+                <div>
+                    <div class="font-display text-lg font-bold text-on-surface">{{ request.user.username }}</div>
+                    <div class="text-sm text-on-surface-variant">Miembro desde {{ request.user.date_joined|date:"F Y" }}</div>
+                </div>
+            </div>
+
+            {% if form.non_field_errors %}
+            <div class="rounded-lg bg-danger/10 border border-danger/30 text-danger text-sm px-3 py-2">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5" for="{{ form.first_name.id_for_label }}">Nombre</label>
+                    <input class="w-full bg-surface-variant rounded-lg px-3 py-2.5 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                           id="{{ form.first_name.id_for_label }}" type="text" name="{{ form.first_name.html_name }}" value="{{ form.first_name.value|default:'' }}">
+                </div>
+                <div>
+                    <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5" for="{{ form.last_name.id_for_label }}">Apellidos</label>
+                    <input class="w-full bg-surface-variant rounded-lg px-3 py-2.5 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                           id="{{ form.last_name.id_for_label }}" type="text" name="{{ form.last_name.html_name }}" value="{{ form.last_name.value|default:'' }}">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5" for="{{ form.email.id_for_label }}">Email</label>
+                <input class="w-full bg-surface-variant rounded-lg px-3 py-2.5 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                       id="{{ form.email.id_for_label }}" type="email" name="{{ form.email.html_name }}" value="{{ form.email.value|default:'' }}">
+                {% if form.email.errors %}<p class="text-xs text-danger mt-1">{{ form.email.errors|striptags }}</p>{% endif %}
+            </div>
+
+            <div x-data="{ preview: '' }">
+                <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5" for="{{ form.avatar.id_for_label }}">Foto de perfil</label>
+                <div class="flex items-center gap-4">
+                    <img x-show="preview" x-cloak :src="preview" alt="Previsualización"
+                         class="w-16 h-16 rounded-full object-cover bg-surface-variant shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <input type="file" id="{{ form.avatar.id_for_label }}" name="{{ form.avatar.html_name }}"
+                               accept="image/png,image/jpeg,image/webp"
+                               @change="preview = $event.target.files.length ? URL.createObjectURL($event.target.files[0]) : ''"
+                               class="block w-full text-sm text-on-surface-variant file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:text-on-primary file:font-semibold file:text-sm file:px-4 file:py-2 file:cursor-pointer hover:file:opacity-90">
+                        <p class="text-[11px] text-on-surface-variant mt-1.5">PNG, JPG o WEBP · máx. 2 MB</p>
+                        {% if form.avatar.errors %}<p class="text-xs text-danger mt-1">{{ form.avatar.errors|striptags }}</p>{% endif %}
+                        {% if request.user.avatar %}
+                        <label class="inline-flex items-center gap-1.5 text-xs text-on-surface-variant mt-2 cursor-pointer">
+                            <input type="checkbox" name="{{ form.avatar.html_name }}-clear"> Quitar foto actual
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-display uppercase tracking-wide text-on-surface-variant mb-1.5" for="{{ form.bio.id_for_label }}">Biografía</label>
+                <textarea class="w-full bg-surface-variant rounded-lg px-3 py-2.5 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary resize-y"
+                          id="{{ form.bio.id_for_label }}" name="{{ form.bio.html_name }}" rows="4" placeholder="Cuéntale al equipo en qué trabajas...">{{ form.bio.value|default:'' }}</textarea>
+            </div>
+
+            <div class="pt-2">
+                <button class="rounded-lg bg-primary text-on-primary font-semibold text-sm py-2.5 px-5 hover:opacity-90 active:scale-95 transition" type="submit">Guardar perfil</button>
+            </div>
+        </form>
+
+        {# ---- Resumen + apariencia ---- #}
+        <aside class="space-y-4">
+            <div class="rounded-xl bg-surface-container border border-outline-variant p-5">
+                <h3 class="text-xs font-display uppercase tracking-wide text-on-surface-variant mb-4">Tu actividad</h3>
+                <dl class="space-y-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <dt class="text-on-surface-variant">Tableros</dt><dd class="font-display font-bold text-on-surface">{{ stats.boards }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-on-surface-variant">Tareas asignadas</dt><dd class="font-display font-bold text-on-surface">{{ stats.assigned }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-on-surface-variant">Vencidas</dt><dd class="font-display font-bold {% if stats.overdue %}text-danger{% else %}text-on-surface{% endif %}">{{ stats.overdue }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-on-surface-variant">Organizaciones</dt><dd class="font-display font-bold text-on-surface">{{ stats.memberships }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <form method="post" action="{% url 'perfil-apariencia' %}"
+                  class="rounded-xl bg-surface-container border border-outline-variant p-5"
+                  x-data="{ brand: '{{ user_theme_brand }}', mode: '{{ user_theme_mode }}',
+                            apply() {
+                                const el = document.documentElement;
+                                if (this.brand) { el.setAttribute('data-brand', this.brand); try{localStorage.setItem('flowly-brand', this.brand)}catch(e){} }
+                                if (this.mode === 'light' || this.mode === 'dark') { el.setAttribute('data-theme', this.mode); try{localStorage.setItem('flowly-theme', this.mode)}catch(e){} }
+                            } }">
+                {% csrf_token %}
+                <h3 class="text-xs font-display uppercase tracking-wide text-on-surface-variant mb-3">Apariencia</h3>
+
+                {# Galería de temas #}
+                <p class="text-[11px] font-display uppercase tracking-wide text-on-surface-variant mb-1.5">Tema</p>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    {% for theme in themes %}
+                    <label class="cursor-pointer rounded-lg border p-2.5 transition-colors"
+                           :class="brand === '{{ theme.key }}' ? 'border-accent ring-1 ring-accent' : 'border-outline-variant hover:border-outline'">
+                        <input type="radio" name="theme_brand" value="{{ theme.key }}" class="sr-only" x-model="brand" @change="apply()">
+                        <span class="flex items-center gap-2">
+                            <span class="flex -space-x-1.5 shrink-0">
+                                <span class="w-5 h-5 rounded-full border border-outline-variant" style="background-color: {{ theme.swatch.surface }};"></span>
+                                <span class="w-5 h-5 rounded-full border border-outline-variant" style="background-color: {{ theme.swatch.primary }};"></span>
+                            </span>
+                            <span class="text-sm font-semibold text-on-surface truncate">{{ theme.label }}</span>
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                {# Claro / Oscuro / Automático #}
+                <p class="text-[11px] font-display uppercase tracking-wide text-on-surface-variant mb-1.5">Modo</p>
+                <div class="grid grid-cols-3 gap-1 mb-4 rounded-lg bg-surface-variant p-1 text-xs font-semibold">
+                    <label class="cursor-pointer text-center rounded-md py-1.5 transition-colors"
+                           :class="mode === 'light' ? 'bg-surface-container border border-outline-variant text-on-surface' : 'text-on-surface-variant'">
+                        <input type="radio" name="theme_mode" value="light" class="sr-only" x-model="mode" @change="apply()"> Claro
+                    </label>
+                    <label class="cursor-pointer text-center rounded-md py-1.5 transition-colors"
+                           :class="mode === 'dark' ? 'bg-surface-container border border-outline-variant text-on-surface' : 'text-on-surface-variant'">
+                        <input type="radio" name="theme_mode" value="dark" class="sr-only" x-model="mode" @change="apply()"> Oscuro
+                    </label>
+                    <label class="cursor-pointer text-center rounded-md py-1.5 transition-colors"
+                           :class="mode === '' ? 'bg-surface-container border border-outline-variant text-on-surface' : 'text-on-surface-variant'">
+                        <input type="radio" name="theme_mode" value="" class="sr-only" x-model="mode" @change="apply()"> Auto
+                    </label>
+                </div>
+
+                <button type="submit" class="w-full rounded-lg bg-primary text-on-primary font-semibold text-sm py-2.5 hover:opacity-90 active:scale-95 transition">Guardar apariencia</button>
+                <p class="text-[11px] text-on-surface-variant mt-2">Se aplica a tu cuenta en todos tus dispositivos.</p>
+            </form>
+        </aside>
+    </div>
+</div>
+{% endblock %}

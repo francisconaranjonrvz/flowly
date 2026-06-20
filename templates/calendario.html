@@ -1,0 +1,87 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Calendario — Flowly{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto" x-data>
+    {# ---- Cabecera ---- #}
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <div class="flex items-center gap-3">
+            <h1 class="font-display text-xl md:text-2xl font-bold text-on-surface capitalize">{{ month_label }}</h1>
+            <div class="flex items-center gap-1">
+                <a href="?year={{ prev_year }}&month={{ prev_month }}{% if selected_board %}&board={{ selected_board }}{% endif %}{% if selected_priority %}&priority={{ selected_priority }}{% endif %}"
+                   class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-variant transition" aria-label="Mes anterior">
+                    <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                </a>
+                <a href="?year={{ next_year }}&month={{ next_month }}{% if selected_board %}&board={{ selected_board }}{% endif %}{% if selected_priority %}&priority={{ selected_priority }}{% endif %}"
+                   class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-variant transition" aria-label="Mes siguiente">
+                    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                </a>
+                <a href="?year={{ today_year }}&month={{ today_month }}{% if selected_board %}&board={{ selected_board }}{% endif %}{% if selected_priority %}&priority={{ selected_priority }}{% endif %}"
+                   class="ml-1 text-xs font-display font-semibold px-3 py-1.5 rounded-lg border border-outline-variant text-on-surface-variant hover:text-accent hover:border-accent transition">Hoy</a>
+            </div>
+        </div>
+
+        {# ---- Filtros ---- #}
+        <form method="get" class="flex items-center gap-2 text-sm" onchange="this.submit()">
+            <input type="hidden" name="year" value="{{ year }}">
+            <input type="hidden" name="month" value="{{ month }}">
+            <select name="board" class="bg-surface-variant rounded-lg px-3 py-2 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                <option value="">Todos los tableros</option>
+                {% for b in boards %}
+                <option value="{{ b.id }}" {% if selected_board == b.id|stringformat:'s' %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="priority" class="bg-surface-variant rounded-lg px-3 py-2 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                <option value="">Toda prioridad</option>
+                <option value="4" {% if selected_priority == '4' %}selected{% endif %}>Urgente</option>
+                <option value="3" {% if selected_priority == '3' %}selected{% endif %}>Alta</option>
+                <option value="2" {% if selected_priority == '2' %}selected{% endif %}>Media</option>
+                <option value="1" {% if selected_priority == '1' %}selected{% endif %}>Baja</option>
+            </select>
+        </form>
+    </div>
+
+    {# ---- Rejilla ---- #}
+    <div class="rounded-xl border border-outline-variant overflow-hidden">
+        {# Cabecera de días de la semana #}
+        <div class="grid grid-cols-7 bg-surface-container border-b border-outline-variant">
+            {% for name in weekday_names %}
+            <div class="px-2 py-2 text-center text-[11px] font-display uppercase tracking-wide text-on-surface-variant">{{ name }}</div>
+            {% endfor %}
+        </div>
+
+        {# Celdas: separadores 1px uniformes vía gap pintado con outline-variant #}
+        <div class="grid grid-cols-7 gap-px bg-outline-variant">
+            {% for week in weeks %}{% for day in week %}
+            <div class="min-h-[110px] p-1.5 flex flex-col gap-1
+                        {% if day.in_month %}bg-surface-container{% else %}bg-surface-container-low{% endif %}">
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-mono
+                                 {% if day.is_today %}w-6 h-6 flex items-center justify-center rounded-full bg-primary text-on-primary font-bold
+                                 {% elif day.in_month %}text-on-surface{% else %}text-on-surface-variant{% endif %}">{{ day.day }}</span>
+                    {% if day.cards %}<span class="text-[10px] font-mono text-on-surface-variant">{{ day.cards|length }}</span>{% endif %}
+                </div>
+                <div class="flex flex-col gap-1 overflow-hidden">
+                    {% for card in day.cards|slice:":4" %}
+                    {% with lbl=card.labels.first %}
+                    <a href="{% url 'card-edit' board_id=card.column.board_id card_id=card.id %}"
+                       class="group block rounded-md px-2 py-1 text-[11px] leading-tight truncate transition-colors
+                              {% if card.priority == 4 %}bg-danger/15 text-danger hover:bg-danger/25
+                              {% elif card.priority == 3 %}bg-warning/15 text-warning hover:bg-warning/25
+                              {% else %}bg-surface-variant text-on-surface hover:bg-outline-variant{% endif %}"
+                       title="{{ card.title }} · {{ card.column.board.name }}">
+                        {% if lbl %}<span class="inline-block w-1.5 h-1.5 rounded-full mr-1 align-middle" style="background-color: {{ lbl.color }};"></span>{% endif %}{{ card.title }}
+                    </a>
+                    {% endwith %}
+                    {% endfor %}
+                    {% if day.cards|length > 4 %}
+                    <span class="px-2 text-[10px] text-on-surface-variant">+{{ day.cards|length|add:"-4" }} más</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}{% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Equipo — Flowly{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    {# ---- Cabecera + resumen ---- #}
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <div>
+            <h1 class="font-display text-xl md:text-2xl font-bold text-on-surface">Equipo</h1>
+            <p class="text-sm text-on-surface-variant mt-1">{{ active_organization.name|default:'Tu organización' }} · carga de trabajo del equipo</p>
+        </div>
+        <div class="flex items-center gap-2 text-sm">
+            <div class="rounded-lg bg-surface-container border border-outline-variant px-3 py-2 text-center">
+                <div class="font-display font-bold text-on-surface">{{ member_count }}</div>
+                <div class="text-[11px] uppercase tracking-wide text-on-surface-variant">Miembros</div>
+            </div>
+            <div class="rounded-lg bg-surface-container border border-outline-variant px-3 py-2 text-center">
+                <div class="font-display font-bold text-on-surface">{{ total_active }}</div>
+                <div class="text-[11px] uppercase tracking-wide text-on-surface-variant">Tareas activas</div>
+            </div>
+            <div class="rounded-lg border px-3 py-2 text-center {% if overloaded_count %}bg-danger/10 border-danger/40{% else %}bg-surface-container border-outline-variant{% endif %}">
+                <div class="font-display font-bold {% if overloaded_count %}text-danger{% else %}text-on-surface{% endif %}">{{ overloaded_count }}</div>
+                <div class="text-[11px] uppercase tracking-wide text-on-surface-variant">Saturados</div>
+            </div>
+        </div>
+    </div>
+
+    {# ---- Tarjetas de miembros ---- #}
+    {% if members %}
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {% for member in members %}
+        <a href="{% url 'equipo-member' member.user.id %}"
+           class="rounded-xl bg-surface-container border p-5 flex flex-col gap-4 hover:border-accent transition-colors {% if member.overloaded %}border-danger/40{% else %}border-outline-variant{% endif %}">
+            {# Identidad #}
+            <div class="flex items-center gap-3">
+                {% include 'partials/_avatar.html' with profile_user=member.user size='w-11 h-11 text-sm' only %}
+                <div class="min-w-0">
+                    <h3 class="font-semibold text-on-surface truncate">{{ member.user.get_full_name_or_username }}</h3>
+                    <span class="text-[11px] font-display uppercase tracking-wide text-on-surface-variant">{{ member.role }}</span>
+                </div>
+                {% if member.overloaded %}
+                <span class="ml-auto shrink-0 flex items-center gap-1 text-[10px] font-display font-bold uppercase px-2 py-0.5 rounded-full bg-danger/15 text-danger" title="Carga por encima del 85%">
+                    <span class="material-symbols-outlined text-[14px]">warning</span>Saturado
+                </span>
+                {% endif %}
+            </div>
+
+            {# Carga de trabajo #}
+            <div>
+                <div class="flex items-center justify-between text-xs mb-1.5">
+                    <span class="text-on-surface-variant">Carga</span>
+                    <span class="font-mono {% if member.overloaded %}text-danger{% else %}text-on-surface-variant{% endif %}">{{ member.active_count }}/{{ member.capacity }} · {{ member.percent_raw }}%</span>
+                </div>
+                <div class="h-2 w-full rounded-full bg-surface-variant overflow-hidden">
+                    <div class="h-full rounded-full transition-all {% if member.overloaded %}bg-danger{% elif member.percent >= 60 %}bg-warning{% else %}bg-primary{% endif %}" style="width: {{ member.percent }}%;"></div>
+                </div>
+            </div>
+
+            {# Métricas #}
+            <div class="flex items-center gap-4 text-xs text-on-surface-variant">
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">task_alt</span>{{ member.active_count }} activas</span>
+                {% if member.overdue_count %}
+                <span class="flex items-center gap-1 text-danger"><span class="material-symbols-outlined text-[15px]">event_busy</span>{{ member.overdue_count }} vencidas</span>
+                {% endif %}
+            </div>
+
+            {# Áreas (etiquetas) #}
+            {% if member.areas %}
+            <div class="flex flex-wrap gap-1.5">
+                {% for area in member.areas %}
+                <span class="text-[10px] font-display font-semibold px-2 py-0.5 rounded-full" style="background-color: {{ area.color }}26; color: {{ area.color }};">{{ area.name }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="rounded-xl bg-surface-container border border-outline-variant p-12 text-center">
+        <span class="material-symbols-outlined text-on-surface-variant text-[40px] mb-3">groups</span>
+        <p class="text-on-surface-variant">Aún no hay miembros en esta organización.</p>
+        <p class="text-xs text-on-surface-variant mt-1">Invita personas desde el panel de administración.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
