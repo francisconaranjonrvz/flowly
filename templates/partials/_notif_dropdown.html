@@ -1,0 +1,29 @@
+{% comment %}Contenido del desplegable de la campana (HTMX).{% endcomment %}
+<div class="px-3 py-2 border-b border-outline-variant flex items-center justify-between">
+    <p class="text-sm font-semibold text-on-surface">Notificaciones</p>
+    <a href="{% url 'notificaciones' %}" class="text-xs text-accent hover:underline">Ver todas</a>
+</div>
+<ul class="max-h-80 overflow-y-auto py-1">
+    {% for n in notifications %}
+    <li>
+        <a href="{% url 'notification-open' n.id %}"
+           class="flex items-start gap-2.5 px-3 py-2 hover:bg-surface-variant transition-colors {% if n.unread %}bg-primary/5{% endif %}">
+            {% if n.actor %}
+            {% include 'partials/_avatar.html' with profile_user=n.actor size='w-7 h-7 text-[10px]' only %}
+            {% else %}
+            <span class="w-7 h-7 rounded-full bg-surface-variant flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[16px] text-on-surface-variant">notifications</span></span>
+            {% endif %}
+            <span class="min-w-0 flex-1">
+                <span class="block text-xs text-on-surface leading-snug">{{ n.verb }}</span>
+                <span class="block text-[10px] text-on-surface-variant mt-0.5">hace {{ n.created|timesince }}</span>
+            </span>
+            {% if n.unread %}<span class="w-2 h-2 rounded-full bg-accent shrink-0 mt-1"></span>{% endif %}
+        </a>
+    </li>
+    {% empty %}
+    <li class="px-4 py-8 text-center">
+        <div class="text-3xl mb-2">📭</div>
+        <p class="text-xs text-on-surface-variant">Cero notificaciones.<br>O eres muy eficiente o nadie te echa de menos 😅</p>
+    </li>
+    {% endfor %}
+</ul>
