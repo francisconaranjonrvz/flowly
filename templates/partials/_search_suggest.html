@@ -1,0 +1,29 @@
+{% comment %}Resultados de autocompletar del buscador (HTMX).{% endcomment %}
+{% if board_results %}
+<p class="px-3 pt-2 pb-1 text-[10px] font-display uppercase tracking-wide text-on-surface-variant">Tableros</p>
+{% for b in board_results %}
+<a href="{% url 'board-detail' board_id=b.id %}" class="flex items-center gap-2.5 px-3 py-2 hover:bg-surface-variant transition-colors">
+    <span class="material-symbols-outlined text-[18px] text-on-surface-variant">dashboard</span>
+    <span class="text-sm text-on-surface truncate">{{ b.name }}</span>
+</a>
+{% endfor %}
+{% endif %}
+
+{% if card_results %}
+<p class="px-3 pt-2 pb-1 text-[10px] font-display uppercase tracking-wide text-on-surface-variant">Tareas</p>
+{% for c in card_results %}
+<a href="{% url 'card-edit' board_id=c.column.board_id card_id=c.id %}" class="flex items-center gap-2.5 px-3 py-2 hover:bg-surface-variant transition-colors">
+    {% with lbl=c.labels.first %}{% if lbl %}<span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ lbl.color }};"></span>{% else %}<span class="w-2 h-2 rounded-full bg-outline shrink-0"></span>{% endif %}{% endwith %}
+    <span class="flex-1 min-w-0 text-sm text-on-surface truncate">{{ c.title }}</span>
+    <span class="text-[10px] text-on-surface-variant shrink-0 truncate max-w-[7rem]">{{ c.column.board.name }}</span>
+</a>
+{% endfor %}
+{% endif %}
+
+{% if q and not board_results and not card_results %}
+<p class="px-3 py-4 text-center text-xs text-on-surface-variant">Sin coincidencias para «{{ q }}».</p>
+{% endif %}
+
+{% if board_results or card_results %}
+<a href="{% url 'buscar' %}?q={{ q|urlencode }}" class="block px-3 py-2 text-xs text-accent hover:bg-surface-variant border-t border-outline-variant">Ver todos los resultados →</a>
+{% endif %}

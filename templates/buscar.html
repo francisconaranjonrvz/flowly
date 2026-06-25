@@ -1,0 +1,53 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Buscar — Flowly{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <form method="get" action="{% url 'buscar' %}" class="mb-6">
+        <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 inset-y-0 flex items-center leading-none pointer-events-none text-on-surface-variant text-[20px]">search</span>
+            <input type="search" name="q" value="{{ q }}" autofocus placeholder="Buscar tareas y tableros..."
+                   class="w-full h-11 pl-10 pr-4 rounded-lg bg-surface-variant text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary">
+        </div>
+    </form>
+
+    {% if q %}
+    <p class="text-xs text-on-surface-variant mb-4">Resultados para «{{ q }}»</p>
+
+    {% if board_results %}
+    <h2 class="font-display font-bold uppercase tracking-wide text-xs text-on-surface-variant mb-2">Tableros</h2>
+    <div class="rounded-xl border border-outline-variant divide-y divide-outline-variant overflow-hidden mb-6">
+        {% for b in board_results %}
+        <a href="{% url 'board-detail' board_id=b.id %}" class="flex items-center gap-3 px-4 py-2.5 bg-surface-container hover:bg-surface-variant transition-colors">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">dashboard</span>
+            <span class="text-sm text-on-surface">{{ b.name }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if card_results %}
+    <h2 class="font-display font-bold uppercase tracking-wide text-xs text-on-surface-variant mb-2">Tareas</h2>
+    <div class="rounded-xl border border-outline-variant divide-y divide-outline-variant overflow-hidden">
+        {% for c in card_results %}
+        <a href="{% url 'card-edit' board_id=c.column.board_id card_id=c.id %}" class="flex items-center gap-3 px-4 py-2.5 bg-surface-container hover:bg-surface-variant transition-colors">
+            {% with lbl=c.labels.first %}{% if lbl %}<span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ lbl.color }};"></span>{% else %}<span class="w-2 h-2 rounded-full bg-outline shrink-0"></span>{% endif %}{% endwith %}
+            <span class="flex-1 min-w-0 text-sm text-on-surface truncate">{{ c.title }}</span>
+            <span class="text-[11px] text-on-surface-variant shrink-0">{{ c.column.board.name }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not board_results and not card_results %}
+    <div class="text-center py-16 rounded-xl border border-dashed border-outline-variant">
+        <span class="material-symbols-outlined text-accent text-[48px] mb-3">search_off</span>
+        <p class="text-on-surface-variant text-sm">Sin resultados para «{{ q }}».</p>
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="text-center text-on-surface-variant text-sm py-12">Escribe para buscar tareas y tableros.</p>
+    {% endif %}
+</div>
+{% endblock %}

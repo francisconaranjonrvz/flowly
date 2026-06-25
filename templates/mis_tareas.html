@@ -1,0 +1,60 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Mis tareas — Flowly{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-end justify-between gap-4 mb-6">
+        <h1 class="font-display text-2xl md:text-3xl font-bold text-on-surface">Mis tareas</h1>
+        <span class="text-sm text-on-surface-variant">{{ total }} asignada{{ total|pluralize:"s" }}</span>
+    </div>
+
+    {% if total %}
+    <div class="space-y-6">
+        {% for group in groups %}
+        {% if group.cards %}
+        <section>
+            <div class="flex items-center gap-2 mb-2 px-1">
+                <h2 class="font-display font-bold uppercase tracking-wide text-xs {% if group.key == 'overdue' %}text-danger{% else %}text-on-surface-variant{% endif %}">{{ group.label }}</h2>
+                <span class="bg-surface-variant text-on-surface-variant text-[10px] font-bold px-2 py-0.5 rounded-full">{{ group.cards|length }}</span>
+            </div>
+            <div class="rounded-xl border border-outline-variant divide-y divide-outline-variant overflow-hidden">
+                {% for card in group.cards %}
+                <a href="{% url 'card-edit' board_id=card.column.board_id card_id=card.id %}"
+                   class="flex items-center gap-3 px-4 py-2.5 bg-surface-container hover:bg-surface-variant transition-colors">
+                    {% if card.priority == 4 %}<span class="w-2 h-2 rounded-full bg-danger shrink-0" title="Urgente"></span>
+                    {% elif card.priority == 3 %}<span class="w-2 h-2 rounded-full bg-warning shrink-0" title="Alta"></span>
+                    {% elif card.priority == 2 %}<span class="w-2 h-2 rounded-full bg-accent shrink-0" title="Media"></span>
+                    {% elif card.priority == 1 %}<span class="w-2 h-2 rounded-full bg-success shrink-0" title="Baja"></span>
+                    {% else %}<span class="w-2 h-2 rounded-full bg-outline shrink-0"></span>{% endif %}
+
+                    <span class="flex-1 min-w-0 text-sm text-on-surface truncate">{{ card.title }}</span>
+
+                    <span class="hidden sm:inline text-[11px] text-on-surface-variant shrink-0">{{ card.column.board.name }}</span>
+
+                    {% if card.subtask_total %}
+                    <span class="hidden sm:flex items-center gap-1 text-[11px] font-mono text-on-surface-variant shrink-0">
+                        <span class="material-symbols-outlined text-[14px]">checklist</span>{{ card.subtask_done }}/{{ card.subtask_total }}
+                    </span>
+                    {% endif %}
+
+                    {% if card.due_date %}
+                    <span class="flex items-center gap-1 text-[11px] font-mono shrink-0 {% if card.is_overdue %}text-danger{% else %}text-on-surface-variant{% endif %}">
+                        <span class="material-symbols-outlined text-[14px]">event</span>{{ card.due_date|date:"j M" }}
+                    </span>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16 rounded-xl border border-dashed border-outline-variant">
+        <span class="material-symbols-outlined text-accent text-[48px] mb-3">task_alt</span>
+        <p class="text-on-surface-variant text-sm">No tienes tareas asignadas. ¡A por ello!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
