@@ -1,0 +1,60 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Chat — Flowly{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto" x-data="{ newch: false }">
+    <h1 class="font-display text-2xl md:text-3xl font-bold text-on-surface mb-4">Chat</h1>
+
+    {% if channel %}
+    <div class="flex flex-col md:flex-row gap-4">
+        {# ---- Canales ---- #}
+        <aside class="md:w-56 shrink-0">
+            <div class="rounded-xl border border-outline-variant bg-surface-container overflow-hidden">
+                <div class="flex items-center justify-between px-3 py-2 border-b border-outline-variant">
+                    <span class="text-[11px] font-display uppercase tracking-wide text-on-surface-variant">Canales</span>
+                    <button type="button" @click="newch = !newch" class="text-on-surface-variant hover:text-accent" title="Nuevo canal"><span class="material-symbols-outlined text-[18px]">add</span></button>
+                </div>
+                <form x-show="newch" x-cloak method="post" action="{% url 'channel-create' %}" class="p-2 border-b border-outline-variant">
+                    {% csrf_token %}
+                    <input type="text" name="name" maxlength="50" required placeholder="nombre-del-canal"
+                           class="w-full bg-surface-variant rounded-md px-2 py-1.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary">
+                </form>
+                <ul class="p-1 max-h-[60vh] overflow-y-auto">
+                    {% for ch in channels %}
+                    <li>
+                        <a href="{% url 'chat-channel' ch.id %}"
+                           class="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-sm transition-colors {% if ch.id == channel.id %}bg-surface-variant text-accent font-semibold{% else %}text-on-surface-variant hover:bg-surface-variant hover:text-on-surface{% endif %}">
+                            <span class="material-symbols-outlined text-[16px]">tag</span><span class="truncate">{{ ch.name }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </aside>
+
+        {# ---- Conversación ---- #}
+        <div class="flex-1 min-w-0 rounded-xl border border-outline-variant bg-surface-container flex flex-col h-[70vh]">
+            <header class="px-4 h-12 flex items-center gap-2 border-b border-outline-variant shrink-0">
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant">tag</span>
+                <span class="font-display font-bold text-on-surface">{{ channel.name }}</span>
+            </header>
+            <div id="chat-messages" hx-get="{% url 'channel-messages' channel.id %}" hx-trigger="load, every 4s"
+                 hx-swap="innerHTML" hx-on::after-settle="this.scrollTop = this.scrollHeight"
+                 class="flex-1 overflow-y-auto p-4 space-y-3">
+                {% include 'partials/_chat_messages.html' %}
+            </div>
+            <form hx-post="{% url 'channel-send' channel.id %}" hx-target="#chat-messages" hx-swap="innerHTML"
+                  hx-on::after-request="this.reset()" class="shrink-0 border-t border-outline-variant p-3 flex items-center gap-2">
+                {% csrf_token %}
+                <input type="text" name="body" required autocomplete="off" placeholder="Mensaje a #{{ channel.name }}…  (@ menciona)"
+                       class="flex-1 min-w-0 bg-surface-variant rounded-lg px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary">
+                <button type="submit" class="shrink-0 w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center hover:opacity-90"><span class="material-symbols-outlined text-[18px]">send</span></button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-on-surface-variant text-sm">Necesitas una organización activa para usar el chat.</p>
+    {% endif %}
+</div>
+{% endblock %}

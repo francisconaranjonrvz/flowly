@@ -1,0 +1,19 @@
+{% comment %}Lista de mensajes de chat (tablero o canal). Variable: chat_messages.{% endcomment %}
+{% for m in chat_messages %}
+<div class="flex items-start gap-2.5">
+    {% if m.author %}
+    {% include 'partials/_avatar.html' with profile_user=m.author size='w-8 h-8 text-[11px]' only %}
+    {% else %}
+    <span class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0 text-on-surface-variant text-xs">?</span>
+    {% endif %}
+    <div class="min-w-0 flex-1">
+        <div class="flex items-baseline gap-2">
+            <span class="text-xs font-semibold text-on-surface truncate">{% if m.author %}{{ m.author.get_full_name_or_username }}{% else %}Usuario{% endif %}</span>
+            <span class="text-[10px] text-on-surface-variant shrink-0">{{ m.created|date:"j M H:i" }}</span>
+        </div>
+        <p class="text-sm text-on-surface whitespace-pre-wrap break-words">{{ m.body }}</p>
+    </div>
+</div>
+{% empty %}
+<p class="text-center text-xs text-on-surface-variant py-8">Aún no hay mensajes. ¡Saluda al equipo! 👋</p>
+{% endfor %}
