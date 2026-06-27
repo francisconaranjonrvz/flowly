@@ -1,0 +1,8 @@
+{% comment %}Sala de la oficina con un personaje por miembro (HTMX poll).{% endcomment %}
+<div class="office-grid">
+    {% for m in members %}
+    {% include 'partials/_office_char.html' with u=m.user current=m.current %}
+    {% empty %}
+    <p class="col-span-full text-center text-on-surface-variant text-sm py-6">No hay nadie en esta organización todavía.</p>
+    {% endfor %}
+</div>

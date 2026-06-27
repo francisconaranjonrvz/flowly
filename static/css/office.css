@@ -1,0 +1,156 @@
+/* Flowly Office — sala de "videojuego" 8-bit con personajes en sus escritorios.
+   Scoped bajo .office. Usa tokens de tema para la sala; el personaje lleva
+   tinta oscura fija (estética 8-bit) y colores por usuario vía --skin/--hair/--shirt. */
+
+.office { --ink: #18191f; }
+.office-8bit { font-family: 'Press Start 2P', 'Space Grotesk', monospace; line-height: 1.5; }
+
+/* ---- Sala ---- */
+.office-room {
+    position: relative;
+    border: 3px solid rgb(var(--outline-variant));
+    border-radius: 14px;
+    overflow: hidden;
+    background-color: rgb(var(--surface-container-low));
+    /* suelo de baldosas + franja de "pared" arriba */
+    background-image:
+        linear-gradient(rgb(var(--surface-container)) 0, rgb(var(--surface-container)) 64px, transparent 64px),
+        linear-gradient(rgb(var(--outline) / 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(var(--outline) / 0.08) 1px, transparent 1px);
+    background-size: 100% 100%, 32px 32px, 32px 32px;
+    background-position: 0 0, 0 64px, 0 64px;
+    padding: 26px 20px 30px;
+    image-rendering: pixelated;
+}
+.office-room::after {  /* scanlines retro */
+    content: '';
+    position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.045) 0 1px, transparent 1px 3px);
+    mix-blend-mode: multiply; opacity: 0.5;
+}
+
+.office-grid {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 30px 16px;
+    justify-items: center;
+    align-items: end;
+}
+
+/* ---- Puesto (personaje + mesa) ---- */
+.office-seat {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    width: 100%; text-align: center;
+}
+.office-seat--away { filter: grayscale(0.7); opacity: 0.55; }
+
+.office-bubble {
+    position: relative;
+    max-width: 150px;
+    padding: 4px 8px; margin-bottom: 2px;
+    font-size: 11px; line-height: 1.2;
+    color: rgb(var(--on-surface));
+    background: rgb(var(--surface-container));
+    border: 2px solid rgb(var(--outline-variant));
+    border-radius: 8px;
+    box-shadow: 2px 2px 0 rgb(var(--outline) / 0.4);
+}
+.office-bubble::after {  /* pico del bocadillo */
+    content: ''; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: rgb(var(--outline-variant));
+}
+
+/* Figura: personaje detrás, mesa delante */
+.office-figure { position: relative; width: 120px; height: 104px; }
+
+.pc {
+    position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
+    width: 52px; z-index: 1;
+    animation: office-bob 2.6s ease-in-out infinite;
+}
+.office-seat--working .pc { animation-duration: 1.4s; }
+
+/* Cabeza */
+.pc-head {
+    position: relative; width: 30px; height: 26px; margin: 0 auto;
+    background: var(--skin); border: 3px solid var(--ink); border-radius: 4px; z-index: 2;
+}
+.pc-eye { position: absolute; top: 11px; width: 4px; height: 5px; background: var(--ink); }
+.pc-eye--l { left: 6px; } .pc-eye--r { right: 6px; }
+.pc-head::after {  /* boca */
+    content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+    width: 8px; height: 2px; background: var(--ink); opacity: 0.7;
+}
+
+/* Pelo (estilos) */
+.pc-hair { position: absolute; left: 50%; transform: translateX(-50%); top: -4px; z-index: 3; }
+.pixel-char--short .pc-hair { width: 32px; height: 9px; background: var(--hair); border: 3px solid var(--ink); border-bottom: 0; border-radius: 5px 5px 0 0; }
+.pixel-char--long .pc-hair {
+    width: 32px; height: 9px; background: var(--hair); border: 3px solid var(--ink); border-bottom: 0; border-radius: 5px 5px 0 0;
+    box-shadow: -14px 12px 0 -3px var(--hair), 14px 12px 0 -3px var(--hair);
+}
+.pixel-char--cap .pc-hair { width: 34px; height: 11px; background: var(--hair); border: 3px solid var(--ink); border-radius: 6px 6px 0 0; top: -6px; }
+.pixel-char--cap .pc-hair::after { content: ''; position: absolute; left: -6px; bottom: 0; width: 16px; height: 4px; background: var(--hair); border: 3px solid var(--ink); border-top: 0; }
+.pixel-char--bald .pc-hair { display: none; }
+
+/* Cuerpo + brazos (tecleando) */
+.pc-body {
+    position: relative; width: 40px; height: 24px; margin: -2px auto 0;
+    background: var(--shirt); border: 3px solid var(--ink); border-radius: 5px 5px 3px 3px; z-index: 1;
+}
+.pc-arm {
+    position: absolute; top: 4px; width: 8px; height: 16px;
+    background: var(--shirt); border: 3px solid var(--ink); border-radius: 3px;
+    transform-origin: top center;
+}
+.pc-arm--l { left: -7px; animation: office-type 0.42s ease-in-out infinite; }
+.pc-arm--r { right: -7px; animation: office-type 0.42s ease-in-out infinite 0.21s; }
+.office-seat--working .pc-arm--l,
+.office-seat--working .pc-arm--r { animation-duration: 0.22s; }
+.office-seat--busy .pc-arm, .office-seat--available .pc-arm { animation-duration: 0.7s; }
+
+/* Mesa + monitor (delante del personaje) */
+.pc-desk {
+    position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%);
+    width: 92px; height: 20px; z-index: 4;
+    background: #7a5230; border: 3px solid var(--ink); border-radius: 3px;
+    box-shadow: inset 0 4px 0 rgb(255 255 255 / 0.12), 0 4px 0 rgb(0 0 0 / 0.25);
+}
+.pc-monitor {
+    position: absolute; left: 8px; bottom: 16px; z-index: 5;
+    width: 26px; height: 20px; display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #cdebff;
+    background: #11202b; border: 3px solid var(--ink); border-radius: 3px;
+    box-shadow: 0 0 10px rgb(120 200 255 / 0.45); animation: office-screen 2s steps(2) infinite;
+}
+.pc-monitor::after { content: ''; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); width: 8px; height: 4px; background: var(--ink); }
+
+/* Punto de presencia sobre la cabeza */
+.pc-dot { position: absolute; top: -8px; right: 8px; width: 12px; height: 12px; border: 3px solid rgb(var(--surface-container)); z-index: 6; }
+.office-dot--online  { background: rgb(var(--success)); }
+.office-dot--away    { background: rgb(var(--warning)); }
+.office-dot--offline { background: rgb(var(--outline)); }
+.office-dot--busy    { background: rgb(var(--error)); }
+
+.office-seat__name {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 12px;
+    color: rgb(var(--on-surface)); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.office-seat__task {
+    max-width: 150px; font-size: 10px; color: rgb(var(--accent-text));
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.office-seat--me .office-seat__name { color: rgb(var(--primary)); }
+
+@keyframes office-bob   { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
+@keyframes office-type  { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-22deg); } }
+@keyframes office-screen{ 0% { box-shadow: 0 0 8px rgb(120 200 255 / 0.35); } 100% { box-shadow: 0 0 13px rgb(120 200 255 / 0.6); } }
+
+/* ---- Personalizador (swatches) ---- */
+.char-swatch { width: 26px; height: 26px; border: 3px solid var(--ink); border-radius: 4px; cursor: pointer; }
+.char-swatch--on { outline: 3px solid rgb(var(--primary)); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .pc, .pc-arm, .pc-monitor { animation: none !important; }
+}

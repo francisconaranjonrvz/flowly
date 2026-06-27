@@ -1,0 +1,20 @@
+{% comment %}Un personaje 8-bit en su escritorio. Params: u (User), current (Card|None).{% endcomment %}
+{% with c=u.character %}
+<div class="office-seat office-seat--{{ u.status_state }}{% if u.presence == 'away' %} office-seat--away{% endif %}{% if u.id == request.user.id %} office-seat--me{% endif %}"
+     style="--skin: {{ c.skin }}; --hair: {{ c.hair }}; --shirt: {{ c.shirt }};">
+    {% if u.status_message %}<div class="office-bubble">{{ u.status_message }}</div>{% endif %}
+    <div class="office-figure">
+        <div class="pc pixel-char--{{ c.hair_style }}">
+            <span class="pc-dot office-dot--{{ u.presence }}{% if u.status_state == 'busy' and u.presence == 'online' %} office-dot--busy{% endif %}"></span>
+            <div class="pc-hair"></div>
+            <div class="pc-head"><span class="pc-eye pc-eye--l"></span><span class="pc-eye pc-eye--r"></span></div>
+            <div class="pc-body"><span class="pc-arm pc-arm--l"></span><span class="pc-arm pc-arm--r"></span></div>
+        </div>
+        <div class="pc-desk"><div class="pc-monitor">{{ u.username|first|upper }}</div></div>
+    </div>
+    <span class="office-seat__name">{{ u.get_full_name_or_username }}{% if u.id == request.user.id %} (tú){% endif %}</span>
+    {% if current %}
+    <a href="{% url 'card-edit' board_id=current.column.board_id card_id=current.id %}" class="office-seat__task" title="{{ current.title }}">⚡ {{ current.title }}</a>
+    {% endif %}
+</div>
+{% endwith %}

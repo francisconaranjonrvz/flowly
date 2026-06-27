@@ -1,0 +1,75 @@
+{% extends 'base_app.html' %}
+{% load static %}
+
+{% block title %}La Oficina — Flowly{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/office.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="office max-w-5xl mx-auto" x-data="{ custom: false }">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <div>
+            <h1 class="office-8bit text-sm md:text-base text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-accent">videogame_asset</span> LA OFICINA
+            </h1>
+            <p class="text-sm text-on-surface-variant mt-2">Quién anda por {{ active_organization.name|default:'tu espacio' }} ahora mismo.</p>
+        </div>
+        <button type="button" @click="custom = !custom"
+                class="rounded-lg border border-outline-variant text-on-surface text-sm py-2 px-3 hover:bg-surface-variant transition flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[18px]">face</span> Mi personaje
+        </button>
+    </div>
+
+    {# Tu estado #}
+    <form method="post" action="{% url 'office-status' %}" class="flex flex-wrap items-center gap-2 mb-3">
+        {% csrf_token %}
+        <select name="status_state" aria-label="Estado"
+                class="bg-surface-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+            {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if request.user.status_state == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="status_message" maxlength="80" value="{{ request.user.status_message }}"
+               placeholder="¿En qué andas?" aria-label="Mensaje de estado"
+               class="bg-surface-variant rounded-lg px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary w-40 md:w-48">
+        <button type="submit" class="rounded-lg bg-primary text-on-primary font-semibold text-sm py-2 px-4 hover:opacity-90 active:scale-95 transition">Guardar</button>
+    </form>
+
+    {# Personalizador de personaje #}
+    <form x-show="custom" x-cloak method="post" action="{% url 'office-customize' %}"
+          class="rounded-xl border border-outline-variant bg-surface-container p-4 mb-4">
+        {% csrf_token %}
+        <div class="flex flex-wrap items-start gap-x-8 gap-y-3">
+            {% for field, label, opts in palette_groups %}
+            <div>
+                <p class="text-[11px] font-display uppercase tracking-wide text-on-surface-variant mb-1.5">{{ label }}</p>
+                <div class="flex gap-2">
+                    {% for i, hex in opts %}
+                    <label>
+                        <input type="radio" name="{{ field }}" value="{{ i }}" class="sr-only peer" {% if field == 'char_skin' and request.user.char_skin == i or field == 'char_hair' and request.user.char_hair == i or field == 'char_shirt' and request.user.char_shirt == i %}checked{% endif %}>
+                        <span class="block w-7 h-7 rounded border-[3px] cursor-pointer peer-checked:ring-2 peer-checked:ring-primary transition" style="background: {{ hex }}; border-color: #18191f;"></span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+            <div>
+                <p class="text-[11px] font-display uppercase tracking-wide text-on-surface-variant mb-1.5">Pelo</p>
+                <select name="char_hair_style" class="bg-surface-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                    {% for i, name in palettes.hair_styles %}
+                    <option value="{{ i }}" {% if request.user.char_hair_style == i %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="mt-3 rounded-lg bg-primary text-on-primary font-semibold text-sm py-2 px-4 hover:opacity-90 active:scale-95 transition">Guardar aspecto</button>
+    </form>
+
+    <div class="office-room" hx-get="{% url 'office-room' %}" hx-trigger="load, every 10s" hx-swap="innerHTML">
+        <p class="text-center text-on-surface-variant text-sm">Cargando la oficina…</p>
+    </div>
+</div>
+{% endblock %}
