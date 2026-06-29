@@ -1,0 +1,4 @@
+# Scripts que ejecuta Linux dentro de Docker: SIEMPRE finales de línea LF
+docker-entrypoint.sh text eol=lf
+scripts/*.sh text eol=lf
+*.sh text eol=lf
