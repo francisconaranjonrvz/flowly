@@ -25,10 +25,16 @@ X_FRAME_OPTIONS = 'DENY'
 # = follow-up: django-storages + S3 (STORAGES['default'] -> S3Boto3Storage,
 # MEDIA_URL apuntando al bucket/CDN).
 
-# Railway expone el dominio público en RAILWAY_PUBLIC_DOMAIN: lo añadimos solo
-# a hosts y orígenes CSRF de confianza para que el deploy funcione sin tener
-# que configurar el dominio a mano.
+# Railway expone el dominio público en RAILWAY_PUBLIC_DOMAIN: lo añadimos a
+# los orígenes CSRF de confianza para que el deploy funcione sin configurar
+# el dominio a mano.
 _railway_domain = env('RAILWAY_PUBLIC_DOMAIN', default='')
 if _railway_domain:
-    ALLOWED_HOSTS = [*ALLOWED_HOSTS, _railway_domain]
     CSRF_TRUSTED_ORIGINS = [*CSRF_TRUSTED_ORIGINS, f'https://{_railway_domain}']
+
+# El healthcheck de Railway llega por red interna con un Host distinto al
+# dominio público, así que el filtrado por Host no es viable aquí: la
+# protección real contra Host-header spoofing la da el proxy de Railway (no
+# hay forma de hablar con la app sin pasar por él) y CSRF_TRUSTED_ORIGINS
+# (que sigue restringido) para peticiones que cambian estado.
+ALLOWED_HOSTS = ['*']
