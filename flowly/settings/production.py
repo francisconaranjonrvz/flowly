@@ -4,6 +4,11 @@ from .base import *  # noqa: F401, F403
 
 DEBUG = False
 
+# En producción el SECRET_KEY es OBLIGATORIO: sin fallback inseguro. Si la
+# variable de entorno no está definida, el arranque falla de forma explícita
+# (mejor que servir con una clave pública conocida).
+SECRET_KEY = env('DJANGO_SECRET_KEY')  # noqa: F405
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = env.bool('DJANGO_SECURE_SSL_REDIRECT', default=True)
 SESSION_COOKIE_SECURE = True

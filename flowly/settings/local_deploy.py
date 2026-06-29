@@ -3,7 +3,13 @@
 # pero relaja lo que impide servir por http://localhost (TLS/cookies seguras).
 # Útil para levantar la app en local con un servidor WSGI real (waitress).
 
-from .production import *  # noqa: F401, F403
+import os
+
+# production.py exige DJANGO_SECRET_KEY; aquí inyectamos una clave fija local
+# ANTES de importarlo para que el arranque local no requiera variables.
+os.environ.setdefault('DJANGO_SECRET_KEY', 'local-deploy-insecure-key-not-for-production')
+
+from .production import *  # noqa: E402, F401, F403
 
 DEBUG = False
 
