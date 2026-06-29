@@ -11,6 +11,10 @@ SECRET_KEY = env('DJANGO_SECRET_KEY')  # noqa: F405
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = env.bool('DJANGO_SECURE_SSL_REDIRECT', default=True)
+# El healthcheck de Railway llega por HTTP interno (sin X-Forwarded-Proto), así
+# que SECURE_SSL_REDIRECT lo redirige a https (301) y Railway lo da por fallido.
+# Eximimos solo esas rutas; el resto del sitio sigue forzando HTTPS.
+SECURE_REDIRECT_EXEMPT = [r'^healthz$', r'^readyz$']
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = env.int('DJANGO_HSTS_SECONDS', default=0)
