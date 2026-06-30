@@ -1,8 +1,35 @@
-{% comment %}Sala de la oficina con un personaje por miembro (HTMX poll).{% endcomment %}
-<div class="office-grid">
-    {% for m in members %}
-    {% include 'partials/_office_char.html' with u=m.user current=m.current %}
-    {% empty %}
-    <p class="col-span-full text-center text-on-surface-variant text-sm py-6">No hay nadie en esta organización todavía.</p>
-    {% endfor %}
+{% comment %}Sala "tipo gather.town": suelo, paredes, mobiliario y un personaje
+por miembro sentado en su puesto (HTMX poll de presencia).{% endcomment %}
+<div class="office-scene-wrap">
+    <div class="office-scene">
+        {# Pared superior: ventanas, reloj y rótulo de la sala #}
+        <div class="office-wall">
+            <span class="office-window"></span>
+            <span class="office-window"></span>
+            <span class="office-window"></span>
+            <span class="office-clock"></span>
+            <span class="office-roomsign">{{ active_organization.name|default:'Flowly' }}</span>
+        </div>
+
+        {# Mobiliario decorativo (no interactivo) #}
+        <div class="deco deco-rug" aria-hidden="true"></div>
+        <div class="deco deco-plant deco-plant--1" aria-hidden="true"></div>
+        <div class="deco deco-plant deco-plant--2" aria-hidden="true"></div>
+        <div class="deco deco-plant deco-plant--3" aria-hidden="true"></div>
+        <div class="deco deco-bookshelf" aria-hidden="true"></div>
+        <div class="deco deco-coffee" aria-hidden="true"></div>
+        <div class="deco deco-cooler" aria-hidden="true"></div>
+        <div class="deco deco-pingpong" aria-hidden="true"><span></span></div>
+        <div class="deco deco-sofa" aria-hidden="true"></div>
+        <div class="deco deco-table" aria-hidden="true"></div>
+
+        {# Puestos de los miembros #}
+        <div class="office-desks">
+            {% for m in members %}
+            {% include 'partials/_office_char.html' with u=m.user current=m.current %}
+            {% empty %}
+            <p class="office-empty">No hay nadie en esta organización todavía.</p>
+            {% endfor %}
+        </div>
+    </div>
 </div>

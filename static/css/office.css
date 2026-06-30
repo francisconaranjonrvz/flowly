@@ -1,156 +1,263 @@
-/* Flowly Office — sala de "videojuego" 8-bit con personajes en sus escritorios.
+/* Flowly Office — sala "tipo gather.town": vista top-down de una oficina con
+   suelo de baldosas, paredes, mobiliario (plantas, sofá, ping-pong, cafetera,
+   estantería) y un personaje 8-bit por miembro sentado en su puesto.
    Scoped bajo .office. Usa tokens de tema para la sala; el personaje lleva
-   tinta oscura fija (estética 8-bit) y colores por usuario vía --skin/--hair/--shirt. */
+   tinta oscura fija (estética 8-bit) y colores por usuario (--skin/--hair/--shirt). */
 
 .office { --ink: #18191f; }
 .office-8bit { font-family: 'Press Start 2P', 'Space Grotesk', monospace; line-height: 1.5; }
 
-/* ---- Sala ---- */
-.office-room {
+/* ---- Contenedor de polling (neutro) ---- */
+.office-room { position: relative; }
+
+/* ---- Wrapper con scroll horizontal en pantallas estrechas ---- */
+.office-scene-wrap {
+    overflow-x: auto;
+    border-radius: 16px;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ---- Escena (la sala) ---- */
+.office-scene {
     position: relative;
-    border: 3px solid rgb(var(--outline-variant));
-    border-radius: 14px;
+    min-width: 720px;
+    border: 4px solid var(--ink);
+    border-radius: 16px;
     overflow: hidden;
-    background-color: rgb(var(--surface-container-low));
-    /* suelo de baldosas + franja de "pared" arriba */
-    background-image:
-        linear-gradient(rgb(var(--surface-container)) 0, rgb(var(--surface-container)) 64px, transparent 64px),
-        linear-gradient(rgb(var(--outline) / 0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(var(--outline) / 0.08) 1px, transparent 1px);
-    background-size: 100% 100%, 32px 32px, 32px 32px;
-    background-position: 0 0, 0 64px, 0 64px;
-    padding: 26px 20px 30px;
     image-rendering: pixelated;
+    /* Suelo de baldosas en damero suave con tonos del tema */
+    background-color: rgb(var(--surface-container-low));
+    background-image:
+        linear-gradient(45deg, rgb(var(--outline) / 0.05) 25%, transparent 25%, transparent 75%, rgb(var(--outline) / 0.05) 75%),
+        linear-gradient(45deg, rgb(var(--outline) / 0.05) 25%, transparent 25%, transparent 75%, rgb(var(--outline) / 0.05) 75%);
+    background-size: 56px 56px;
+    background-position: 0 0, 28px 28px;
+    padding: 92px 90px 150px;   /* hueco para pared (arriba), plantas/estantería (laterales) y lounge (abajo) */
 }
-.office-room::after {  /* scanlines retro */
+.office-scene::after {  /* scanlines retro muy sutiles */
     content: '';
-    position: absolute; inset: 0; pointer-events: none;
-    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.045) 0 1px, transparent 1px 3px);
-    mix-blend-mode: multiply; opacity: 0.5;
+    position: absolute; inset: 0; pointer-events: none; z-index: 30;
+    background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.035) 0 1px, transparent 1px 3px);
+    mix-blend-mode: multiply; opacity: 0.45;
 }
 
-.office-grid {
-    position: relative; z-index: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 30px 16px;
-    justify-items: center;
-    align-items: end;
-}
-
-/* ---- Puesto (personaje + mesa) ---- */
-.office-seat {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    width: 100%; text-align: center;
-}
-.office-seat--away { filter: grayscale(0.7); opacity: 0.55; }
-
-.office-bubble {
-    position: relative;
-    max-width: 150px;
-    padding: 4px 8px; margin-bottom: 2px;
-    font-size: 11px; line-height: 1.2;
-    color: rgb(var(--on-surface));
+/* ---- Pared superior ---- */
+.office-wall {
+    position: absolute; top: 0; left: 0; right: 0; height: 64px; z-index: 1;
     background: rgb(var(--surface-container));
-    border: 2px solid rgb(var(--outline-variant));
-    border-radius: 8px;
-    box-shadow: 2px 2px 0 rgb(var(--outline) / 0.4);
+    border-bottom: 4px solid var(--ink);
+    box-shadow: inset 0 -10px 0 rgb(var(--outline) / 0.10);
+    display: flex; align-items: center; gap: 26px; padding: 0 22px;
 }
-.office-bubble::after {  /* pico del bocadillo */
-    content: ''; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
-    border: 5px solid transparent; border-top-color: rgb(var(--outline-variant));
+.office-window {
+    width: 70px; height: 34px; border: 3px solid var(--ink); border-radius: 4px;
+    background:
+        linear-gradient(180deg, #bfe6ff 0%, #8fcaf2 100%);
+    box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.35);
+    position: relative;
+}
+.office-window::after {  /* cruceta de la ventana */
+    content: ''; position: absolute; inset: 0;
+    background:
+        linear-gradient(var(--ink), var(--ink)) center / 3px 100% no-repeat,
+        linear-gradient(var(--ink), var(--ink)) center / 100% 3px no-repeat;
+    opacity: 0.55;
+}
+.office-clock {
+    width: 24px; height: 24px; border-radius: 50%; border: 3px solid var(--ink);
+    background: #fff;
+    position: relative; margin-left: auto;
+}
+.office-clock::after {
+    content: ''; position: absolute; left: 50%; top: 50%; width: 7px; height: 2px;
+    background: var(--ink); transform-origin: left center; transform: translate(0, -50%) rotate(-40deg);
+}
+.office-roomsign {
+    font-family: 'Press Start 2P', monospace; font-size: 10px; letter-spacing: 1px;
+    color: rgb(var(--on-surface)); background: rgb(var(--surface-variant));
+    border: 3px solid var(--ink); border-radius: 6px; padding: 5px 10px;
+    max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    text-transform: uppercase;
 }
 
-/* Figura: personaje detrás, mesa delante */
-.office-figure { position: relative; width: 120px; height: 104px; }
+/* ---- Mobiliario decorativo (no interactivo) ---- */
+.deco { position: absolute; z-index: 1; }
 
-.pc {
-    position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
-    width: 52px; z-index: 1;
-    animation: office-bob 2.6s ease-in-out infinite;
+/* Alfombra central bajo los puestos */
+.deco-rug {
+    left: 50%; top: 50%; transform: translate(-50%, -52%);
+    width: 62%; height: 56%; border-radius: 22px;
+    background:
+        repeating-linear-gradient(45deg, rgb(var(--primary) / 0.10) 0 14px, rgb(var(--primary) / 0.04) 14px 28px);
+    border: 3px solid rgb(var(--primary) / 0.22);
 }
-.office-seat--working .pc { animation-duration: 1.4s; }
 
-/* Cabeza */
-.pc-head {
-    position: relative; width: 30px; height: 26px; margin: 0 auto;
-    background: var(--skin); border: 3px solid var(--ink); border-radius: 4px; z-index: 2;
+/* Plantas en macetas */
+.deco-plant { width: 46px; height: 58px; }
+.deco-plant::before {  /* maceta */
+    content: ''; position: absolute; left: 7px; bottom: 0; width: 32px; height: 22px;
+    background: #b9743a; border: 3px solid var(--ink); border-radius: 3px 3px 6px 6px;
 }
+.deco-plant::after {  /* fronda */
+    content: ''; position: absolute; left: 0; bottom: 18px; width: 46px; height: 40px;
+    background:
+        radial-gradient(circle at 30% 60%, #3f9a52 0 9px, transparent 10px),
+        radial-gradient(circle at 70% 55%, #2f7d42 0 10px, transparent 11px),
+        radial-gradient(circle at 50% 30%, #46a85a 0 11px, transparent 12px),
+        radial-gradient(circle at 50% 70%, #2f7d42 0 12px, transparent 13px);
+    filter: drop-shadow(0 0 0 var(--ink));
+}
+.deco-plant--1 { top: 78px; left: 14px; }
+.deco-plant--2 { top: 78px; right: 14px; }
+.deco-plant--3 { bottom: 96px; left: 50%; transform: translateX(-50%); }
+
+/* Estantería (pared izquierda) */
+.deco-bookshelf {
+    top: 150px; left: 12px; width: 56px; height: 116px;
+    background: #7a5230; border: 3px solid var(--ink); border-radius: 4px;
+    background-image:
+        repeating-linear-gradient(90deg, #d65a5a 0 7px, #e0a93f 7px 13px, #5aa9d6 13px 20px, #6fae5a 20px 27px, #b07fd0 27px 34px),
+        linear-gradient(#7a5230, #7a5230);
+    background-size: 100% 30px, 100% 100%;
+    background-repeat: repeat-x, no-repeat;
+    background-position: 6px 10px, 0 0;
+    box-shadow: inset 0 0 0 3px #7a5230, inset 0 0 0 5px var(--ink);
+}
+
+/* Cafetera (pared derecha) */
+.deco-coffee {
+    top: 150px; right: 14px; width: 40px; height: 50px;
+    background: #2b2f36; border: 3px solid var(--ink); border-radius: 4px;
+}
+.deco-coffee::before {  /* cafetera/jarra */
+    content: ''; position: absolute; left: 8px; bottom: 8px; width: 20px; height: 14px;
+    background: #d6502f; border: 3px solid var(--ink); border-radius: 2px 2px 4px 4px;
+}
+.deco-coffee::after {  /* vapor/luz */
+    content: ''; position: absolute; left: 9px; top: 7px; width: 22px; height: 5px;
+    background: #46a85a; border: 2px solid var(--ink); border-radius: 2px;
+}
+
+/* Dispensador de agua (derecha, más abajo) */
+.deco-cooler {
+    bottom: 100px; right: 22px; width: 30px; height: 52px;
+    background: #e8eef2; border: 3px solid var(--ink); border-radius: 3px;
+}
+.deco-cooler::before {  /* garrafa azul */
+    content: ''; position: absolute; left: 4px; top: -16px; width: 22px; height: 22px;
+    background: #5ab4e6; border: 3px solid var(--ink); border-radius: 6px 6px 3px 3px;
+}
+
+/* Mesa de ping-pong (abajo-izquierda) */
+.deco-pingpong {
+    bottom: 26px; left: 60px; width: 150px; height: 58px;
+    background: #2f8f56; border: 4px solid var(--ink); border-radius: 6px;
+    box-shadow: inset 0 0 0 3px rgb(255 255 255 / 0.10);
+}
+.deco-pingpong::before {  /* línea central */
+    content: ''; position: absolute; left: 8px; right: 8px; top: 50%; height: 3px;
+    background: #fff; transform: translateY(-50%);
+}
+.deco-pingpong > span {  /* red */
+    position: absolute; left: 50%; top: 4px; bottom: 4px; width: 4px;
+    background: repeating-linear-gradient(#fff 0 3px, transparent 3px 6px);
+    transform: translateX(-50%);
+}
+
+/* Sofá + mesita (lounge, abajo-derecha) */
+.deco-sofa {
+    bottom: 30px; right: 90px; width: 120px; height: 46px;
+    background: #6f76c4; border: 4px solid var(--ink); border-radius: 10px 10px 6px 6px;
+    box-shadow: inset 0 10px 0 rgb(255 255 255 / 0.14), inset 22px 0 0 -16px var(--ink), inset -22px 0 0 -16px var(--ink);
+}
+.deco-table {
+    bottom: 40px; right: 56px; width: 30px; height: 22px;
+    background: #b9743a; border: 3px solid var(--ink); border-radius: 4px;
+}
+.deco-table::after {  /* taza sobre la mesa */
+    content: ''; position: absolute; left: 9px; top: -6px; width: 10px; height: 8px;
+    background: #fff; border: 2px solid var(--ink); border-radius: 2px;
+}
+
+/* ---- Puestos de los miembros (rejilla central) ---- */
+.office-desks {
+    position: relative; z-index: 5;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 40px 18px;
+    justify-items: center; align-items: end;
+}
+.office-empty { grid-column: 1 / -1; text-align: center; color: rgb(var(--on-surface-variant)); font-size: 13px; padding: 30px 0; }
+
+/* ---- Puesto (bocadillo + personaje + mesa + etiqueta) ---- */
+.seat { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; text-align: center; }
+.seat--away { filter: grayscale(0.65); opacity: 0.6; }
+
+.seat__bubble {
+    position: relative; max-width: 150px; padding: 4px 9px; margin-bottom: 2px;
+    font-size: 11px; line-height: 1.25; color: rgb(var(--on-surface));
+    background: rgb(var(--surface-container)); border: 2px solid var(--ink); border-radius: 9px;
+    box-shadow: 2px 2px 0 rgb(0 0 0 / 0.18);
+}
+.seat__bubble::after {
+    content: ''; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: var(--ink);
+}
+
+/* Pod: silla detrás, personaje, mesa delante */
+.seat__pod { position: relative; width: 124px; height: 110px; }
+.seat__chair {
+    position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+    width: 46px; height: 40px; background: #46505e; border: 3px solid var(--ink);
+    border-radius: 8px 8px 4px 4px; z-index: 0;
+}
+
+.pc { position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%); width: 52px; z-index: 2; animation: office-bob 2.6s ease-in-out infinite; }
+.seat--working .pc { animation-duration: 1.4s; }
+
+.pc-head { position: relative; width: 30px; height: 26px; margin: 0 auto; background: var(--skin); border: 3px solid var(--ink); border-radius: 4px; z-index: 2; }
 .pc-eye { position: absolute; top: 11px; width: 4px; height: 5px; background: var(--ink); }
 .pc-eye--l { left: 6px; } .pc-eye--r { right: 6px; }
-.pc-head::after {  /* boca */
-    content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
-    width: 8px; height: 2px; background: var(--ink); opacity: 0.7;
-}
+.pc-head::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 8px; height: 2px; background: var(--ink); opacity: 0.7; }
 
-/* Pelo (estilos) */
 .pc-hair { position: absolute; left: 50%; transform: translateX(-50%); top: -4px; z-index: 3; }
 .pixel-char--short .pc-hair { width: 32px; height: 9px; background: var(--hair); border: 3px solid var(--ink); border-bottom: 0; border-radius: 5px 5px 0 0; }
-.pixel-char--long .pc-hair {
-    width: 32px; height: 9px; background: var(--hair); border: 3px solid var(--ink); border-bottom: 0; border-radius: 5px 5px 0 0;
-    box-shadow: -14px 12px 0 -3px var(--hair), 14px 12px 0 -3px var(--hair);
-}
+.pixel-char--long .pc-hair { width: 32px; height: 9px; background: var(--hair); border: 3px solid var(--ink); border-bottom: 0; border-radius: 5px 5px 0 0; box-shadow: -14px 12px 0 -3px var(--hair), 14px 12px 0 -3px var(--hair); }
 .pixel-char--cap .pc-hair { width: 34px; height: 11px; background: var(--hair); border: 3px solid var(--ink); border-radius: 6px 6px 0 0; top: -6px; }
 .pixel-char--cap .pc-hair::after { content: ''; position: absolute; left: -6px; bottom: 0; width: 16px; height: 4px; background: var(--hair); border: 3px solid var(--ink); border-top: 0; }
 .pixel-char--bald .pc-hair { display: none; }
 
-/* Cuerpo + brazos (tecleando) */
-.pc-body {
-    position: relative; width: 40px; height: 24px; margin: -2px auto 0;
-    background: var(--shirt); border: 3px solid var(--ink); border-radius: 5px 5px 3px 3px; z-index: 1;
-}
-.pc-arm {
-    position: absolute; top: 4px; width: 8px; height: 16px;
-    background: var(--shirt); border: 3px solid var(--ink); border-radius: 3px;
-    transform-origin: top center;
-}
+.pc-body { position: relative; width: 40px; height: 24px; margin: -2px auto 0; background: var(--shirt); border: 3px solid var(--ink); border-radius: 5px 5px 3px 3px; z-index: 1; }
+.pc-arm { position: absolute; top: 4px; width: 8px; height: 16px; background: var(--shirt); border: 3px solid var(--ink); border-radius: 3px; transform-origin: top center; }
 .pc-arm--l { left: -7px; animation: office-type 0.42s ease-in-out infinite; }
 .pc-arm--r { right: -7px; animation: office-type 0.42s ease-in-out infinite 0.21s; }
-.office-seat--working .pc-arm--l,
-.office-seat--working .pc-arm--r { animation-duration: 0.22s; }
-.office-seat--busy .pc-arm, .office-seat--available .pc-arm { animation-duration: 0.7s; }
+.seat--working .pc-arm--l, .seat--working .pc-arm--r { animation-duration: 0.22s; }
+.seat--busy .pc-arm, .seat--available .pc-arm { animation-duration: 0.7s; }
 
-/* Mesa + monitor (delante del personaje) */
-.pc-desk {
-    position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%);
-    width: 92px; height: 20px; z-index: 4;
-    background: #7a5230; border: 3px solid var(--ink); border-radius: 3px;
-    box-shadow: inset 0 4px 0 rgb(255 255 255 / 0.12), 0 4px 0 rgb(0 0 0 / 0.25);
-}
-.pc-monitor {
-    position: absolute; left: 8px; bottom: 16px; z-index: 5;
-    width: 26px; height: 20px; display: flex; align-items: center; justify-content: center;
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #cdebff;
-    background: #11202b; border: 3px solid var(--ink); border-radius: 3px;
-    box-shadow: 0 0 10px rgb(120 200 255 / 0.45); animation: office-screen 2s steps(2) infinite;
-}
-.pc-monitor::after { content: ''; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); width: 8px; height: 4px; background: var(--ink); }
+.seat__desk { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); width: 96px; height: 22px; z-index: 4; background: #7a5230; border: 3px solid var(--ink); border-radius: 3px; box-shadow: inset 0 4px 0 rgb(255 255 255 / 0.12), 0 4px 0 rgb(0 0 0 / 0.25); }
+.seat__monitor { position: absolute; left: 8px; bottom: 16px; width: 26px; height: 20px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #cdebff; background: #11202b; border: 3px solid var(--ink); border-radius: 3px; box-shadow: 0 0 10px rgb(120 200 255 / 0.45); animation: office-screen 2s steps(2) infinite; }
+.seat__monitor::after { content: ''; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); width: 8px; height: 4px; background: var(--ink); }
 
-/* Punto de presencia sobre la cabeza */
-.pc-dot { position: absolute; top: -8px; right: 8px; width: 12px; height: 12px; border: 3px solid rgb(var(--surface-container)); z-index: 6; }
-.office-dot--online  { background: rgb(var(--success)); }
+/* Etiqueta de nombre tipo gather.town (pill con punto de presencia) */
+.seat__tag {
+    display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+    padding: 3px 9px; border-radius: 999px;
+    background: rgb(var(--surface-container)); border: 2px solid var(--ink);
+    box-shadow: 1px 2px 0 rgb(0 0 0 / 0.18);
+}
+.seat__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.office-dot--online  { background: rgb(var(--success)); box-shadow: 0 0 0 2px rgb(var(--success) / 0.25); }
 .office-dot--away    { background: rgb(var(--warning)); }
 .office-dot--offline { background: rgb(var(--outline)); }
 .office-dot--busy    { background: rgb(var(--error)); }
-
-.office-seat__name {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 12px;
-    color: rgb(var(--on-surface)); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.office-seat__task {
-    max-width: 150px; font-size: 10px; color: rgb(var(--accent-text));
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.office-seat--me .office-seat__name { color: rgb(var(--primary)); }
+.seat__name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 12px; color: rgb(var(--on-surface)); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seat--me .seat__name { color: rgb(var(--primary)); }
+.seat__task { max-width: 150px; font-size: 10px; color: rgb(var(--accent-text)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 @keyframes office-bob   { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
 @keyframes office-type  { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-22deg); } }
 @keyframes office-screen{ 0% { box-shadow: 0 0 8px rgb(120 200 255 / 0.35); } 100% { box-shadow: 0 0 13px rgb(120 200 255 / 0.6); } }
 
-/* ---- Personalizador (swatches) ---- */
-.char-swatch { width: 26px; height: 26px; border: 3px solid var(--ink); border-radius: 4px; cursor: pointer; }
-.char-swatch--on { outline: 3px solid rgb(var(--primary)); outline-offset: 1px; }
-
 @media (prefers-reduced-motion: reduce) {
-    .pc, .pc-arm, .pc-monitor { animation: none !important; }
+    .pc, .pc-arm, .seat__monitor { animation: none !important; }
 }
