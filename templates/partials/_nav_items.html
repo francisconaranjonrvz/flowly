@@ -1,0 +1,32 @@
+{% comment %}Ítems de navegación principales. Compartidos por el sidebar de
+escritorio (_sidebar.html) y el drawer móvil (_topbar.html) para no duplicar.{% endcomment %}
+{% with base='flex items-center gap-3 px-3 py-2 rounded-lg font-display text-[15px] transition-colors' %}
+<a href="{% url 'home' %}"
+   class="{{ base }} {% if active_section == 'tableros' %}bg-surface-variant text-accent font-bold{% else %}text-on-surface-variant hover:bg-surface-variant hover:text-on-surface{% endif %}">
+    <span class="material-symbols-outlined text-[20px]">dashboard</span> Tableros
+</a>
+<a href="{% url 'mis-tareas' %}"
+   class="{{ base }} {% if active_section == 'mis-tareas' %}bg-surface-variant text-accent font-bold{% else %}text-on-surface-variant hover:bg-surface-variant hover:text-on-surface{% endif %}">
+    <span class="material-symbols-outlined text-[20px]">assignment_ind</span> Mis tareas
+</a>
+<a href="{% url 'calendario' %}"
+   class="{{ base }} {% if active_section == 'calendario' %}bg-surface-variant text-accent font-bold{% else %}text-on-surface-variant hover:bg-surface-variant hover:text-on-surface{% endif %}">
+    <span class="material-symbols-outlined text-[20px]">calendar_today</span> Calendario
+</a>
+<a href="{% url 'equipo' %}"
+   class="{{ base }} {% if active_section == 'equipo' %}bg-surface-variant text-accent font-bold{% else %}text-on-surface-variant hover:bg-surface-variant hover:text-on-surface{% endif %}">
+    <span class="material-symbols-outlined text-[20px]">groups</span> Equipo
+</a>
+<a href="{% url 'chat' %}"
+   class="{{ base }} {% if active_section == 'chat' %}bg-surface-variant text-accent font-bold{% else %}text-on-surface-variant hover:bg-surface-variant hover:text-on-surface{% endif %}">
+    <span class="material-symbols-outlined text-[20px]">forum</span> Chat
+</a>
+<a href="{% url 'office' %}"
+   class="{{ base }} {% if active_section == 'office' %}bg-surface-variant text-accent font-bold{% else %}text-on-surface-variant hover:bg-surface-variant hover:text-on-surface{% endif %}">
+    <span class="material-symbols-outlined text-[20px]">videogame_asset</span> La Oficina
+</a>
+<a href="{% url 'perfil' %}"
+   class="{{ base }} {% if active_section == 'perfil' %}bg-surface-variant text-accent font-bold{% else %}text-on-surface-variant hover:bg-surface-variant hover:text-on-surface{% endif %}">
+    <span class="material-symbols-outlined text-[20px]">account_circle</span> Perfil
+</a>
+{% endwith %}

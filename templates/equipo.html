@@ -10,6 +10,14 @@
             <h1 class="font-display text-xl md:text-2xl font-bold text-on-surface">Equipo</h1>
             <p class="text-sm text-on-surface-variant mt-1">{{ active_organization.name|default:'Tu organización' }} · carga de trabajo del equipo</p>
         </div>
+        {% if is_manager %}
+        <button type="button"
+                hx-get="{% url 'invite-manage' %}" hx-target="#invite-slot" hx-swap="innerHTML"
+                class="inline-flex items-center gap-2 rounded-lg bg-primary text-on-primary font-display font-bold text-sm py-2.5 px-4 hover:opacity-90 transition active:scale-95">
+            <span class="material-symbols-outlined text-[18px]">person_add</span>
+            Invitar al equipo
+        </button>
+        {% endif %}
         <div class="flex items-center gap-2 text-sm">
             <div class="rounded-lg bg-surface-container border border-outline-variant px-3 py-2 text-center">
                 <div class="font-display font-bold text-on-surface">{{ member_count }}</div>
@@ -25,6 +33,9 @@
             </div>
         </div>
     </div>
+
+    {# ---- Panel de invitación (se rellena vía HTMX al pulsar "Invitar") ---- #}
+    <div id="invite-slot" class="mb-6 empty:mb-0"></div>
 
     {# ---- Tarjetas de miembros ---- #}
     {% if members %}
@@ -79,8 +90,8 @@
     {% else %}
     <div class="rounded-xl bg-surface-container border border-outline-variant p-12 text-center">
         <span class="material-symbols-outlined text-on-surface-variant text-[40px] mb-3">groups</span>
-        <p class="text-on-surface-variant">Aún no hay miembros en esta organización.</p>
-        <p class="text-xs text-on-surface-variant mt-1">Invita personas desde el panel de administración.</p>
+        <p class="text-on-surface-variant">Aún no hay más miembros en este workspace.</p>
+        {% if is_manager %}<p class="text-xs text-on-surface-variant mt-1">Usa «Invitar al equipo» para compartir el enlace de invitación.</p>{% endif %}
     </div>
     {% endif %}
 </div>

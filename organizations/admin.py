@@ -2,7 +2,12 @@
 
 from django.contrib import admin
 
-from .models import Organization, OrganizationMembership, OrganizationTheme
+from .models import (
+    Organization,
+    OrganizationInvite,
+    OrganizationMembership,
+    OrganizationTheme,
+)
 
 
 class OrganizationThemeInline(admin.StackedInline):
@@ -38,3 +43,11 @@ class OrganizationMembershipAdmin(admin.ModelAdmin):
     list_filter = ('role',)
     search_fields = ('organization__name', 'user__username')
     autocomplete_fields = ['user', 'organization']
+
+
+@admin.register(OrganizationInvite)
+class OrganizationInviteAdmin(admin.ModelAdmin):
+    list_display = ('organization', 'role', 'created_by', 'created_at')
+    search_fields = ('organization__name',)
+    autocomplete_fields = ['organization', 'created_by']
+    readonly_fields = ('token', 'created_at')

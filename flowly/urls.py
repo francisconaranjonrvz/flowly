@@ -7,6 +7,7 @@ from django.urls import path, re_path
 from django.views.static import serve as static_serve
 
 from boards.views import (
+    board_columns,
     board_create_view,
     board_delete_view,
     board_detail_view,
@@ -51,7 +52,12 @@ from collab.views import (
     notifications_view,
     presence_ping,
 )
-from organizations.views import org_switch_view
+from organizations.views import (
+    invite_accept_view,
+    invite_manage_view,
+    organization_create_view,
+    org_switch_view,
+)
 from users.views import appearance_update_view, perfil_view, register_view
 
 from .health import liveness, readiness
@@ -74,6 +80,9 @@ urlpatterns = [
 
     # Organizaciones
     path('org/switch/', org_switch_view, name='org-switch'),
+    path('org/crear/', organization_create_view, name='org-create'),
+    path('equipo/invitar/', invite_manage_view, name='invite-manage'),
+    path('unirse/<str:token>/', invite_accept_view, name='invite-accept'),
 
     # Presencia (heartbeat)
     path('presence/ping/', presence_ping, name='presence-ping'),
@@ -115,6 +124,7 @@ urlpatterns = [
     # Tableros
     path('board/create/', board_create_view, name='board-create'),
     path('board/<int:board_id>/', board_detail_view, name='board-detail'),
+    path('board/<int:board_id>/columns/', board_columns, name='board-columns'),
     path('board/<int:board_id>/edit/', board_update_view, name='board-update'),
     path('board/<int:board_id>/delete/', board_delete_view, name='board-delete'),
 

@@ -1,0 +1,36 @@
+{% comment %}Panel de invitación: enlace compartible + copiar + regenerar.
+Se carga/refresca vía HTMX desde Equipo. Solo lo ve un manager.{% endcomment %}
+<div id="invite-panel" class="rounded-xl bg-surface-container border border-outline-variant p-4"
+     x-data="{ copied: false,
+               copy() { navigator.clipboard.writeText($refs.link.value).then(() => { this.copied = true; setTimeout(() => this.copied = false, 1500); }); } }">
+    <div class="flex items-center gap-2 mb-2">
+        <span class="material-symbols-outlined text-accent text-[20px]">link</span>
+        <h3 class="font-display font-bold text-on-surface">Enlace de invitación</h3>
+    </div>
+    <p class="text-xs text-on-surface-variant mb-3">
+        Cualquiera con este enlace podrá unirse a <strong>{{ invite.organization.name }}</strong> como miembro.
+        Regenéralo para invalidar el anterior.
+    </p>
+
+    <div class="flex items-center gap-2">
+        <input x-ref="link" type="text" readonly
+               value="{{ request.scheme }}://{{ request.get_host }}{% url 'invite-accept' invite.token %}"
+               class="flex-1 min-w-0 bg-surface-variant rounded-lg px-3 py-2 text-sm text-on-surface font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+               @focus="$event.target.select()">
+        <button type="button" @click="copy()"
+                class="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-primary text-on-primary text-sm font-display font-semibold px-3 py-2 hover:opacity-90 transition active:scale-95">
+            <span class="material-symbols-outlined text-[18px]" x-show="!copied">content_copy</span>
+            <span class="material-symbols-outlined text-[18px]" x-show="copied" x-cloak>check</span>
+            <span x-text="copied ? 'Copiado' : 'Copiar'">Copiar</span>
+        </button>
+    </div>
+
+    <form method="post" action="{% url 'invite-manage' %}" hx-post="{% url 'invite-manage' %}" hx-target="#invite-panel" hx-swap="outerHTML" class="mt-3">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="regenerate">
+        <button type="submit"
+                class="inline-flex items-center gap-1.5 text-xs text-on-surface-variant hover:text-accent transition">
+            <span class="material-symbols-outlined text-[16px]">autorenew</span> Regenerar enlace
+        </button>
+    </form>
+</div>

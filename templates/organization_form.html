@@ -1,0 +1,46 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Crear workspace — Flowly{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <a href="{% url 'home' %}" class="inline-flex items-center gap-1 text-sm text-on-surface-variant hover:text-accent transition mb-4">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Volver
+    </a>
+
+    <h1 class="font-display text-2xl font-bold text-on-surface mb-1">Crear workspace</h1>
+    <p class="text-sm text-on-surface-variant mb-6">Un workspace agrupa tableros, equipo y chat. Serás su propietario.</p>
+
+    {% if error %}
+    <div class="mb-4 rounded-lg bg-danger/15 text-danger text-sm px-4 py-3">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="{% url 'org-create' %}" class="space-y-5">
+        {% csrf_token %}
+        <div>
+            <label for="ws-name" class="block text-sm font-semibold text-on-surface mb-1.5">Nombre</label>
+            <input id="ws-name" type="text" name="name" required autofocus maxlength="120"
+                   value="{{ request.POST.name|default:'' }}"
+                   placeholder="Mi empresa, Proyecto X…"
+                   class="w-full bg-surface-variant rounded-lg px-3 py-2.5 text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary">
+        </div>
+
+        <div>
+            <label for="ws-brand" class="block text-sm font-semibold text-on-surface mb-1.5">Tema de marca</label>
+            <select id="ws-brand" name="brand"
+                    class="w-full bg-surface-variant rounded-lg px-3 py-2.5 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                {% for value, label in brands %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+            <p class="text-xs text-on-surface-variant mt-1.5">Define el aspecto visual. Lo puedes ajustar luego.</p>
+        </div>
+
+        <button type="submit"
+                class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-on-primary font-display font-bold text-sm py-2.5 px-5 hover:opacity-90 transition active:scale-95">
+            <span class="material-symbols-outlined text-[18px]">add_business</span>
+            Crear workspace
+        </button>
+    </form>
+</div>
+{% endblock %}

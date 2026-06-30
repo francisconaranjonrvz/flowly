@@ -38,8 +38,11 @@
         </form>
     </div>
 
-    {# ---- Rejilla ---- #}
-    <div class="rounded-xl border border-outline-variant overflow-hidden">
+    {# ---- Agenda (móvil) ---- #}
+    {% include 'partials/_calendar_agenda.html' %}
+
+    {# ---- Rejilla (escritorio) ---- #}
+    <div class="hidden md:block rounded-xl border border-outline-variant overflow-hidden">
         <div class="grid grid-cols-7 bg-surface-container border-b border-outline-variant">
             {% for name in weekday_names %}
             <div class="px-2 py-2 text-center text-[11px] font-display uppercase tracking-wide text-on-surface-variant">{{ name }}</div>

@@ -1,9 +1,15 @@
 # Modelos de organización (tenant), membresía y tema de marca.
 
+import secrets
+
 from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.text import slugify
+
+
+def _generate_invite_token():
+    return secrets.token_urlsafe(32)
 
 hex_color_validator = RegexValidator(
     regex=r'^#(?:[0-9a-fA-F]{6})$',
@@ -84,6 +90,47 @@ class OrganizationMembership(models.Model):
     @property
     def is_manager(self):
         return self.role in (self.Role.OWNER, self.Role.ADMIN)
+
+
+class OrganizationInvite(models.Model):
+    """Enlace de invitación a un workspace (un enlace activo por organización).
+
+    Quien abre el enlace y confirma se une a la organización con el rol del
+    invite. Regenerar el token invalida el anterior. Sin email: la única
+    barrera es conocer el token (suficiente para un MVP de equipo).
+    """
+
+    organization = models.OneToOneField(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='invite',
+    )
+    token = models.CharField(
+        max_length=64, unique=True, default=_generate_invite_token,
+    )
+    role = models.CharField(
+        max_length=10,
+        choices=OrganizationMembership.Role.choices,
+        default=OrganizationMembership.Role.MEMBER,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='created_invites',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'organization invite'
+        verbose_name_plural = 'organization invites'
+
+    def __str__(self):
+        return f'Invite de {self.organization}'
+
+    def regenerate(self):
+        self.token = _generate_invite_token()
+        self.save(update_fields=['token'])
 
 
 def _hex_field(help_text=''):

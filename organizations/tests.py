@@ -195,3 +195,110 @@ class FullPaletteThemeTests(TestCase):
         self.assertIn('--brand-on-accent:17 24 39;', html)       # lima -> negro
         self.assertIn('color-scheme:light;', html)
         self.assertIn('Mulish', html)
+
+
+# --- v6: creación de workspaces e invitaciones por enlace ---
+
+from organizations.models import OrganizationInvite  # noqa: E402
+from organizations.services import (  # noqa: E402
+    create_team_organization,
+    join_organization,
+)
+
+
+class CreateTeamOrgServiceTests(TestCase):
+    def test_creates_team_org_with_owner(self):
+        user = User.objects.create_user('u1', password='pass12345')
+        org = create_team_organization(user, 'Acme Team', Organization.Brand.NSW)
+        self.assertFalse(org.is_personal)
+        self.assertEqual(org.brand, Organization.Brand.NSW)
+        m = OrganizationMembership.objects.get(user=user, organization=org)
+        self.assertEqual(m.role, 'owner')
+
+
+class OrganizationCreateViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('u1', password='pass12345')
+        self.client.login(username='u1', password='pass12345')
+
+    def test_post_creates_and_activates(self):
+        resp = self.client.post(reverse('org-create'), {'name': 'Mi Empresa', 'brand': 'flowly'})
+        self.assertEqual(resp.status_code, 302)
+        org = Organization.objects.get(name='Mi Empresa')
+        self.assertFalse(org.is_personal)
+        self.assertEqual(self.client.session['active_org_id'], org.id)
+
+    def test_post_empty_name_does_not_create(self):
+        self.client.post(reverse('org-create'), {'name': '   ', 'brand': 'flowly'})
+        self.assertFalse(Organization.objects.filter(name='').exists())
+        self.assertEqual(Organization.objects.filter(is_personal=False).count(), 0)
+
+
+class InviteManageTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.org = Organization.objects.create(name='Acme')
+        cls.manager = User.objects.create_user('boss', password='pass12345')
+        cls.member = User.objects.create_user('joe', password='pass12345')
+        OrganizationMembership.objects.create(organization=cls.org, user=cls.manager, role='owner')
+        OrganizationMembership.objects.create(organization=cls.org, user=cls.member, role='member')
+
+    def _activate(self, username):
+        self.client.login(username=username, password='pass12345')
+        self.client.post(reverse('org-switch'), {'organization': self.org.id})
+
+    def test_manager_gets_invite_link(self):
+        self._activate('boss')
+        resp = self.client.get(reverse('invite-manage'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(OrganizationInvite.objects.filter(organization=self.org).exists())
+
+    def test_non_manager_forbidden(self):
+        self._activate('joe')
+        resp = self.client.get(reverse('invite-manage'))
+        self.assertEqual(resp.status_code, 403)
+
+    def test_regenerate_changes_token(self):
+        self._activate('boss')
+        self.client.get(reverse('invite-manage'))
+        invite = OrganizationInvite.objects.get(organization=self.org)
+        old = invite.token
+        self.client.post(reverse('invite-manage'), {'action': 'regenerate'})
+        invite.refresh_from_db()
+        self.assertNotEqual(invite.token, old)
+
+
+class InviteAcceptTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.org = Organization.objects.create(name='Acme')
+        cls.owner = User.objects.create_user('boss', password='pass12345')
+        OrganizationMembership.objects.create(organization=cls.org, user=cls.owner, role='owner')
+        cls.invite = OrganizationInvite.objects.create(organization=cls.org, created_by=cls.owner)
+        cls.newcomer = User.objects.create_user('newbie', password='pass12345')
+
+    def test_accept_joins_org(self):
+        self.client.login(username='newbie', password='pass12345')
+        resp = self.client.post(reverse('invite-accept', args=[self.invite.token]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(
+            OrganizationMembership.objects.filter(organization=self.org, user=self.newcomer).exists()
+        )
+        self.assertEqual(self.client.session['active_org_id'], self.org.id)
+
+    def test_accept_is_idempotent(self):
+        self.client.login(username='newbie', password='pass12345')
+        self.client.post(reverse('invite-accept', args=[self.invite.token]))
+        self.client.post(reverse('invite-accept', args=[self.invite.token]))
+        self.assertEqual(
+            OrganizationMembership.objects.filter(organization=self.org, user=self.newcomer).count(), 1
+        )
+
+    def test_invalid_token_404(self):
+        self.client.login(username='newbie', password='pass12345')
+        resp = self.client.get(reverse('invite-accept', args=['nope-not-a-token']))
+        self.assertEqual(resp.status_code, 404)
+
+    def test_join_service_uses_invite_role(self):
+        membership = join_organization(self.newcomer, self.invite)
+        self.assertEqual(membership.role, 'member')

@@ -328,3 +328,25 @@ class BoardViewModesTests(TestCase):
         resp = self.client.get(reverse('board-detail', args=[self.board.id]), {'view': 'nope'})
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'board.js')
+
+
+class BoardColumnsPollTests(TestCase):
+    """La vista de polling del kanban (tiempo real) respeta permisos."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.alice = User.objects.create_user(username='alice', password='alicepass1')
+        cls.bob = User.objects.create_user(username='bob', password='bobpass1234')
+        cls.board = Board.objects.create(owner=cls.alice, name='B')
+        Column.objects.create(board=cls.board, title='To Do', order=0)
+
+    def test_owner_gets_columns_partial(self):
+        self.client.login(username='alice', password='alicepass1')
+        resp = self.client.get(reverse('board-columns', args=[self.board.pk]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'To Do')
+
+    def test_non_member_forbidden(self):
+        self.client.login(username='bob', password='bobpass1234')
+        resp = self.client.get(reverse('board-columns', args=[self.board.pk]))
+        self.assertEqual(resp.status_code, 403)

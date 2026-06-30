@@ -1,0 +1,33 @@
+{% extends 'base_app.html' %}
+
+{% block title %}Unirte a {{ organization.name }} — Flowly{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-8">
+    <div class="rounded-2xl bg-surface-container border border-outline-variant p-8 text-center">
+        <span class="w-14 h-14 mx-auto rounded-2xl bg-primary text-on-primary flex items-center justify-center mb-4">
+            <span class="material-symbols-outlined text-[28px]">group_add</span>
+        </span>
+
+        {% if already_member %}
+        <h1 class="font-display text-xl font-bold text-on-surface mb-2">Ya eres miembro</h1>
+        <p class="text-sm text-on-surface-variant mb-6">Ya formas parte de <strong>{{ organization.name }}</strong>.</p>
+        <a href="{% url 'home' %}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-on-primary font-display font-bold text-sm py-2.5 px-5 hover:opacity-90 transition">
+            Ir al workspace
+        </a>
+        {% else %}
+        <h1 class="font-display text-xl font-bold text-on-surface mb-2">Unirte al workspace</h1>
+        <p class="text-sm text-on-surface-variant mb-6">Te han invitado a <strong>{{ organization.name }}</strong>. Al unirte verás sus tableros, equipo y chat.</p>
+        <form method="post" action="{% url 'invite-accept' invite.token %}" class="flex flex-col gap-2">
+            {% csrf_token %}
+            <button type="submit"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-on-primary font-display font-bold text-sm py-2.5 px-5 hover:opacity-90 transition active:scale-95">
+                <span class="material-symbols-outlined text-[18px]">check</span>
+                Unirme a {{ organization.name }}
+            </button>
+            <a href="{% url 'home' %}" class="text-xs text-on-surface-variant hover:text-on-surface transition py-1">Ahora no</a>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,12 @@
-{% comment %} Barra superior: marca móvil + buscador + acciones. {% endcomment %}
-<header class="sticky top-0 z-30 h-16 flex items-center gap-3 px-4 md:px-6 bg-background/80 backdrop-blur-xl border-b border-outline-variant">
+{% comment %} Barra superior: hamburguesa móvil + marca + buscador + acciones. {% endcomment %}
+<header class="sticky top-0 z-30 h-16 flex items-center gap-3 px-4 md:px-6 bg-background/80 backdrop-blur-xl border-b border-outline-variant"
+        x-data="{ drawer: false }" @keydown.escape.window="drawer = false">
+
+    {# Hamburguesa (solo móvil): abre el drawer con la navegación completa #}
+    <button type="button" class="md:hidden w-10 h-10 -ml-2 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors"
+            @click="drawer = true" aria-label="Abrir menú">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
 
     {# Marca (solo móvil; en escritorio está la sidebar) #}
     <a href="{% url 'home' %}" class="md:hidden flex items-center gap-2 font-display font-bold text-on-surface">
@@ -8,6 +15,54 @@
         </span>
         Flowly
     </a>
+
+    {# Drawer de navegación (solo móvil) #}
+    <div class="md:hidden" x-cloak>
+        {# Overlay #}
+        <div x-show="drawer" x-transition.opacity @click="drawer = false"
+             class="fixed inset-0 z-40 bg-black/50"></div>
+        {# Panel deslizante #}
+        <aside x-show="drawer"
+               x-transition:enter="transition ease-out duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+               x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full"
+               class="fixed left-0 top-0 z-50 w-72 max-w-[85vw] h-screen flex flex-col bg-surface-container border-r border-outline-variant p-4">
+            <div class="flex items-center justify-between mb-6">
+                <a href="{% url 'home' %}" class="flex items-center gap-3 min-w-0">
+                    <span class="w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings:'FILL' 1;">deployed_code</span>
+                    </span>
+                    <span class="leading-tight min-w-0">
+                        <span class="block font-display font-bold text-on-surface truncate">Flowly</span>
+                        <span class="block text-[11px] font-display tracking-wider text-on-surface-variant uppercase truncate">{{ active_organization.name|default:'Tu espacio' }}</span>
+                    </span>
+                </a>
+                <button type="button" @click="drawer = false" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-colors" aria-label="Cerrar menú">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <nav class="flex-1 min-h-0 overflow-y-auto space-y-1" @click="drawer = false">
+                {% include 'partials/_nav_items.html' %}
+            </nav>
+
+            <div class="mt-4 pt-4 border-t border-outline-variant space-y-1">
+                <a href="{% url 'org-create' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg font-display text-[15px] text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">add_business</span> Crear workspace
+                </a>
+                {% for org in user_organizations %}
+                <form method="post" action="{% url 'org-switch' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="organization" value="{{ org.id }}">
+                    <button type="submit"
+                            class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-surface-variant transition-colors {% if org.id == active_organization.id %}text-accent font-semibold{% else %}text-on-surface-variant{% endif %}">
+                        <span class="material-symbols-outlined text-[20px]">{% if org.id == active_organization.id %}check{% else %}corporate_fare{% endif %}</span>
+                        <span class="truncate">{{ org.name }}</span>
+                    </button>
+                </form>
+                {% endfor %}
+            </div>
+        </aside>
+    </div>
 
     {# Buscador (escritorio) con autocompletar #}
     <form method="get" action="{% url 'buscar' %}" class="hidden md:flex flex-1 max-w-md"
@@ -68,8 +123,7 @@
                     <p class="text-[11px] text-on-surface-variant truncate">{{ request.user.email|default:request.user.username }}</p>
                 </div>
 
-                {% if user_organizations|length > 1 %}
-                <p class="px-3 pt-1 pb-1 text-[10px] uppercase tracking-wider text-on-surface-variant font-display">Organización</p>
+                <p class="px-3 pt-1 pb-1 text-[10px] uppercase tracking-wider text-on-surface-variant font-display">Workspaces</p>
                 {% for org in user_organizations %}
                 <form method="post" action="{% url 'org-switch' %}">
                     {% csrf_token %}
@@ -81,8 +135,10 @@
                     </button>
                 </form>
                 {% endfor %}
+                <a href="{% url 'org-create' %}" class="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">add_business</span> Crear workspace
+                </a>
                 <div class="border-t border-outline-variant my-1"></div>
-                {% endif %}
 
                 <a href="{% url 'perfil' %}" class="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors">
                     <span class="material-symbols-outlined text-[18px]">account_circle</span> Perfil

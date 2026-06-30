@@ -207,6 +207,31 @@ def board_detail_view(request, board_id):
     })
 
 
+@login_required
+def board_columns(request, board_id):
+    """Columnas + tarjetas del kanban (HTMX poll: tiempo real sin recargar)."""
+    from tasks.views import _board_members
+
+    board = get_object_or_404(Board, pk=board_id)
+    if not user_can_access_board(request.user, board):
+        return HttpResponseForbidden()
+
+    columns = (
+        board.columns
+        .prefetch_related(
+            'cards__labels', 'cards__assignee',
+            'cards__assignees', 'cards__subtasks', 'cards__comments',
+        )
+        .order_by('order')
+    )
+    return render(request, 'partials/_board_columns.html', {
+        'board': board,
+        'columns': columns,
+        'labels': board.labels.all(),
+        'members': _board_members(board),
+    })
+
+
 # --- Columnas ---
 
 @login_required
@@ -415,6 +440,9 @@ def equipo_view(request):
     members = []
     total_active = 0
     overloaded_count = 0
+    is_manager = any(
+        m.user_id == request.user.id and m.is_manager for m in memberships
+    )
 
     for m in memberships:
         user = m.user
@@ -463,6 +491,7 @@ def equipo_view(request):
         'total_active': total_active,
         'overloaded_count': overloaded_count,
         'capacity': MEMBER_CAPACITY,
+        'is_manager': is_manager,
     })
 
 

@@ -1,0 +1,217 @@
+{% comment %}Columnas + tarjetas del kanban. Contenido interno de <main id="board">.
+Se renderiza desde board.html y se refresca por polling (board_columns view) para
+tiempo real. El #board NO se reemplaza, así que la delegación de eventos de
+board.js (drag&drop) sigue viva; Alpine reinicializa el subárbol al hacer swap.{% endcomment %}
+{% load static %}
+{% for column in columns %}
+<section class="column flex-shrink-0 w-[300px] max-h-full flex flex-col rounded-xl bg-surface-container-low border border-outline-variant p-2"
+         data-column-id="{{ column.id }}" draggable="true"
+         x-data="{ addCard: false, more: false }" @keydown.escape.window="addCard = false">
+
+    {# Cabecera de columna #}
+    <div class="flex items-center justify-between px-1.5 py-2 mb-1">
+        <div class="flex items-center gap-2 min-w-0">
+            <span class="column__drag-handle cursor-grab text-on-surface-variant select-none text-xs" aria-hidden="true">⠿</span>
+            <h3 id="column-title-{{ column.id }}" class="font-display font-bold uppercase tracking-wide text-xs text-on-surface-variant truncate">{{ column.title }}</h3>
+            <span class="bg-surface-variant text-on-surface-variant text-[10px] font-bold px-2 py-0.5 rounded-full">{{ column.cards.count }}</span>
+        </div>
+        <div class="column__actions relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+            <button type="button" @click="open = !open" aria-label="Opciones de columna"
+                    class="w-7 h-7 rounded-md flex items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-colors">
+                <span class="material-symbols-outlined text-[18px]">more_horiz</span>
+            </button>
+            <div x-show="open" x-cloak class="absolute right-0 mt-1 w-52 rounded-lg bg-surface-container border border-outline-variant shadow-lift p-2 z-30">
+                <form method="post"
+                      action="{% url 'column-rename' board_id=board.id column_id=column.id %}"
+                      hx-post="{% url 'column-rename' board_id=board.id column_id=column.id %}"
+                      hx-target="#column-title-{{ column.id }}" hx-swap="outerHTML"
+                      @htmx:after-request="open = false" class="flex gap-1 mb-1">
+                    {% csrf_token %}
+                    <input type="text" name="title" value="{{ column.title }}" aria-label="Nuevo nombre"
+                           class="flex-1 min-w-0 bg-surface-variant rounded-md px-2 py-1.5 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                    <button type="submit" class="rounded-md bg-primary text-on-primary text-xs font-bold px-2 hover:opacity-90">OK</button>
+                </form>
+                <form method="post" action="{% url 'column-delete' board_id=board.id column_id=column.id %}"
+                      onsubmit="return confirm('¿Eliminar columna y todas sus tareas?')">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-danger hover:bg-danger/10 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">delete</span> Eliminar columna
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# Tarjetas #}
+    <div class="column__cards flex-1 overflow-y-auto space-y-2 pr-0.5 kanban-scroll min-h-[8px]" data-column-id="{{ column.id }}">
+        {% for card in column.cards.all %}
+        {% with lbl=card.labels.first %}
+        <article class="card group relative overflow-hidden rounded-lg bg-surface-container border border-outline-variant p-3.5 cursor-grab hover:border-outline transition-colors"
+                 draggable="true" data-card-id="{{ card.id }}">
+            {% if lbl %}<div class="absolute left-0 top-0 bottom-0 w-1" style="background-color: {{ lbl.color }};"></div>{% endif %}
+
+            {% comment %}Enlace que cubre toda la tarjeta: clic en cualquier zona abre el detalle. draggable=false para no interferir con el arrastre.{% endcomment %}
+            <a href="{% url 'card-edit' board_id=board.id card_id=card.id %}" draggable="false"
+               class="absolute inset-0 z-0" aria-label="Abrir «{{ card.title }}»"></a>
+
+            {# Borrar: absoluto arriba-derecha; no fuerza altura de la tarjeta #}
+            <form method="post" action="{% url 'card-delete' board_id=board.id card_id=card.id %}"
+                  class="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onsubmit="event.stopPropagation(); return confirm('¿Eliminar esta tarea?')">
+                {% csrf_token %}
+                <button type="submit" onclick="event.stopPropagation()" aria-label="Eliminar tarjeta"
+                        class="w-6 h-6 rounded flex items-center justify-center text-on-surface-variant hover:text-danger">
+                    <span class="material-symbols-outlined text-[16px]">close</span>
+                </button>
+            </form>
+
+            {# Fila de metadatos: solo si hay etiqueta o prioridad destacada #}
+            {% if lbl or card.priority >= 3 %}
+            <div class="flex items-center gap-2 mb-2 pr-6">
+                {% if lbl %}
+                <span class="font-display text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded" style="background-color: {{ lbl.color }}26; color: {{ lbl.color }};">{{ lbl.name }}</span>
+                {% endif %}
+                {% if card.priority == 4 %}<span class="text-[10px] font-display font-bold uppercase px-1.5 py-0.5 rounded bg-danger/15 text-danger">Urgente</span>
+                {% elif card.priority == 3 %}<span class="text-[10px] font-display font-bold uppercase px-1.5 py-0.5 rounded bg-warning/15 text-warning">Alta</span>{% endif %}
+            </div>
+            {% endif %}
+
+            <h4 class="font-semibold text-sm text-on-surface leading-snug mb-1 pr-6">{{ card.title }}</h4>
+            {% if card.description %}<p class="text-xs text-on-surface-variant line-clamp-2 mb-2">{{ card.description|truncatewords:20 }}</p>{% endif %}
+
+            {% if card.subtask_total %}
+            <div class="mt-2 mb-1">
+                <div class="flex items-center justify-between mb-1 text-[10px] font-mono text-on-surface-variant">
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">checklist</span>{{ card.subtask_done }}/{{ card.subtask_total }}</span>
+                    <span>{{ card.progress }}%</span>
+                </div>
+                <div class="h-1 w-full rounded-full bg-surface-variant overflow-hidden">
+                    <div class="h-full rounded-full bg-primary" style="width: {{ card.progress }}%;"></div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% with assignees=card.assignees.all comment_count=card.comments.count %}
+            {% if card.due_date or assignees or comment_count %}
+            <div class="flex items-center justify-between mt-2 gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    {% if card.due_date %}
+                    <span class="flex items-center gap-1 text-[11px] font-mono {% if card.is_overdue %}text-danger{% else %}text-on-surface-variant{% endif %}">
+                        <span class="material-symbols-outlined text-[14px]">event</span>{{ card.due_date|date:"j M" }}
+                    </span>
+                    {% endif %}
+                    {% if comment_count %}
+                    <span class="flex items-center gap-1 text-[11px] font-mono text-on-surface-variant">
+                        <span class="material-symbols-outlined text-[14px]">chat_bubble</span>{{ comment_count }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% if assignees %}
+                <div class="flex -space-x-2 shrink-0">
+                    {% for member in assignees|slice:":3" %}
+                    {% include 'partials/_avatar.html' with profile_user=member size='w-6 h-6 text-[10px]' ring='border-2 border-surface-container' only %}
+                    {% endfor %}
+                    {% if assignees|length > 3 %}
+                    <span class="w-6 h-6 rounded-full bg-surface-variant border-2 border-surface-container text-on-surface-variant flex items-center justify-center text-[9px] font-display font-bold">+{{ assignees|length|add:"-3" }}</span>
+                    {% endif %}
+                </div>
+                {% elif card.assignee %}
+                {% include 'partials/_avatar.html' with profile_user=card.assignee size='w-6 h-6 text-[10px]' only %}
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endwith %}
+        </article>
+        {% endwith %}
+        {% empty %}
+        <p class="text-center text-on-surface-variant text-xs py-6">Sin tareas</p>
+        {% endfor %}
+    </div>
+
+    {# Añadir tarjeta #}
+    <button type="button" x-show="!addCard"
+            @click="addCard = true; $nextTick(() => $refs.cardTitle.focus())"
+            class="mt-1 flex items-center gap-2 w-full px-2 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors">
+        <span class="material-symbols-outlined text-[18px]">add</span> Añadir tarea
+    </button>
+    <form method="post" action="{% url 'card-create' board_id=board.id %}" class="card-form mt-1 space-y-2" x-show="addCard" x-cloak>
+        {% csrf_token %}
+        <input type="hidden" name="column" value="{{ column.id }}">
+        <input class="w-full bg-surface-container rounded-lg p-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary" type="text" name="title" x-ref="cardTitle" placeholder="Título de la tarea..." autocomplete="off" aria-label="Título" required>
+        <div class="flex items-center gap-2">
+            <select name="priority" class="bg-surface-container rounded-lg p-2 text-xs text-on-surface focus:outline-none" aria-label="Prioridad">
+                <option value="0">Sin prioridad</option>
+                <option value="1">Baja</option>
+                <option value="2">Media</option>
+                <option value="3">Alta</option>
+                <option value="4">Urgente</option>
+            </select>
+            <input class="flex-1 min-w-0 bg-surface-container rounded-lg p-2 text-xs text-on-surface focus:outline-none" type="date" name="due_date" aria-label="Fecha límite">
+        </div>
+
+        {# Más opciones: descripción, etiquetas, asignados #}
+        <button type="button" @click="more = !more"
+                class="flex items-center gap-1 text-[11px] font-display uppercase tracking-wide text-on-surface-variant hover:text-accent transition-colors">
+            <span class="material-symbols-outlined text-[16px]" x-text="more ? 'expand_less' : 'expand_more'">expand_more</span>
+            <span x-text="more ? 'Menos opciones' : 'Más opciones'">Más opciones</span>
+        </button>
+        <div x-show="more" x-cloak class="space-y-2">
+            <textarea name="description" rows="2" placeholder="Descripción (opcional)..."
+                      class="w-full bg-surface-container rounded-lg p-2 text-xs text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary resize-y"></textarea>
+            {% if labels %}
+            <div>
+                <p class="text-[10px] font-display uppercase tracking-wide text-on-surface-variant mb-1">Etiquetas</p>
+                <div class="flex flex-wrap gap-1.5">
+                    {% for label in labels %}
+                    <label class="cursor-pointer text-[11px] font-display font-semibold px-2 py-0.5 rounded-full border transition-colors"
+                           x-data="{ on: false }"
+                           :style="on ? 'background-color: {{ label.color }}26; color: {{ label.color }}; border-color: {{ label.color }}' : 'border-color: rgb(var(--outline-variant))'"
+                           :class="on ? '' : 'text-on-surface-variant'">
+                        <input type="checkbox" name="labels" value="{{ label.id }}" class="hidden" @change="on = $event.target.checked">
+                        {{ label.name }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% if members %}
+            <div>
+                <p class="text-[10px] font-display uppercase tracking-wide text-on-surface-variant mb-1">Asignados</p>
+                <div class="flex flex-wrap gap-1.5">
+                    {% for member in members %}
+                    <label class="cursor-pointer flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full border transition-colors"
+                           x-data="{ on: false }"
+                           :class="on ? 'border-primary bg-primary/10 text-on-surface' : 'border-outline-variant text-on-surface-variant'">
+                        <input type="checkbox" name="assignees" value="{{ member.id }}" class="hidden" @change="on = $event.target.checked">
+                        {{ member.get_full_name_or_username }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button class="rounded-lg bg-primary text-on-primary font-semibold text-xs py-2 px-3 hover:opacity-90 active:scale-95 transition" type="submit">Añadir</button>
+            <button class="rounded-lg text-on-surface-variant text-xs py-2 px-3 hover:bg-surface-variant transition" type="button" @click="addCard = false; more = false">Cancelar</button>
+        </div>
+    </form>
+</section>
+{% endfor %}
+
+{# Añadir columna #}
+<div class="column-add-wrapper flex-shrink-0 w-[300px]" x-data="{ open: false }" @keydown.escape.window="open = false">
+    <button type="button" x-show="!open"
+            @click="open = true; $nextTick(() => $refs.colTitle.focus())"
+            class="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-outline-variant text-on-surface-variant hover:text-accent hover:border-accent transition-colors">
+        <span class="material-symbols-outlined text-[20px]">add</span> Nueva columna
+    </button>
+    <form method="post" action="{% url 'column-create' board_id=board.id %}" class="rounded-xl bg-surface-container-low border border-outline-variant p-2 space-y-2" x-show="open" x-cloak>
+        {% csrf_token %}
+        <input class="w-full bg-surface-container rounded-lg p-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary" type="text" name="title" x-ref="colTitle" placeholder="Nombre de la columna..." autocomplete="off" aria-label="Nombre de la columna" required>
+        <div class="flex items-center gap-2">
+            <button class="rounded-lg bg-primary text-on-primary font-semibold text-xs py-2 px-3 hover:opacity-90 active:scale-95 transition" type="submit">Añadir</button>
+            <button class="rounded-lg text-on-surface-variant text-xs py-2 px-3 hover:bg-surface-variant transition" type="button" @click="open = false">Cancelar</button>
+        </div>
+    </form>
+</div>

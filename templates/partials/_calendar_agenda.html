@@ -1,0 +1,37 @@
+{% comment %}Vista agenda del calendario para móvil (md:hidden): lista vertical
+de los días del mes con tareas. Reutilizada por calendario.html y
+board_calendar.html. Espera `weeks` en el contexto.{% endcomment %}
+<div class="md:hidden" x-data
+     x-init="if (!$refs.list.children.length) $refs.empty.classList.remove('hidden')">
+    <div x-ref="list" class="space-y-2">
+        {% for week in weeks %}{% for day in week %}
+        {% if day.in_month and day.cards %}
+        <div class="rounded-xl border border-outline-variant bg-surface-container overflow-hidden">
+            <div class="flex items-center gap-2 px-3 py-2 border-b border-outline-variant {% if day.is_today %}bg-primary/10{% endif %}">
+                <span class="text-sm font-mono {% if day.is_today %}text-accent font-bold{% else %}text-on-surface{% endif %}">{{ day.day }}</span>
+                <span class="text-xs text-on-surface-variant capitalize">{{ day.date|date:"l" }}</span>
+                <span class="ml-auto text-[10px] font-mono text-on-surface-variant">{{ day.cards|length }}</span>
+            </div>
+            <div class="p-2 space-y-1">
+                {% for card in day.cards %}
+                {% with lbl=card.labels.first %}
+                <a href="{% url 'card-edit' board_id=card.column.board_id card_id=card.id %}"
+                   class="block rounded-md px-2.5 py-1.5 text-sm leading-tight truncate transition-colors
+                          {% if card.priority == 4 %}bg-danger/15 text-danger hover:bg-danger/25
+                          {% elif card.priority == 3 %}bg-warning/15 text-warning hover:bg-warning/25
+                          {% else %}bg-surface-variant text-on-surface hover:bg-outline-variant{% endif %}"
+                   title="{{ card.title }}">
+                    {% if lbl %}<span class="inline-block w-1.5 h-1.5 rounded-full mr-1 align-middle" style="background-color: {{ lbl.color }};"></span>{% endif %}{{ card.title }}
+                </a>
+                {% endwith %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}{% endfor %}
+    </div>
+    <div x-ref="empty" class="hidden rounded-xl border border-outline-variant bg-surface-container p-8 text-center">
+        <span class="material-symbols-outlined text-on-surface-variant text-[32px] mb-2">event_available</span>
+        <p class="text-sm text-on-surface-variant">No hay tareas con fecha este mes.</p>
+    </div>
+</div>
