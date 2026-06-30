@@ -1,10 +1,9 @@
-{% comment %}Logomark de Flowly: 3 gotas que insinúan sutilmente una "F". Color
-único vía currentColor (hereda text-primary del bloque que lo envuelve, así se
-adapta a marca/tema). Param opcional: cls (tamaño; usa altura + w-auto, p.ej.
-'h-8 w-auto'; añade ahí el color si se necesita distinto de text-primary).{% endcomment %}
-<svg class="{{ cls|default:'h-7 w-auto' }} text-primary" viewBox="18 7 75 103" fill="none"
-     xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-    <path d="M45 12 L67.89 84.8 A24 24 0 1 1 22.11 84.8 Z" fill="currentColor"/>
-    <path d="M50.5 18.5 L78.5 10.5 A16.5 16.5 0 1 1 71.5 41.5 Z" fill="currentColor"/>
-    <path d="M48.5 56 L70.5 48 A14.5 14.5 0 1 1 64.5 73 Z" fill="currentColor"/>
-</svg>
+{% load static %}
+{% comment %}Logomark de Flowly (artwork real del usuario, en PNG). Se pinta vía
+CSS mask + bg-current, así hereda text-primary del bloque que lo envuelve y se
+adapta a marca/tema (índigo Flowly, lima NSW, claro/oscuro) sin redibujar nada.
+Param opcional: cls (tamaño; usa altura, p.ej. 'h-8'; el ancho se calcula solo
+por el aspect-ratio del logo).{% endcomment %}
+<span class="{{ cls|default:'h-7' }} text-primary bg-current inline-block shrink-0"
+      style="aspect-ratio:510/483;-webkit-mask-image:url('{% static 'img/flowly-logo-mask.png' %}');mask-image:url('{% static 'img/flowly-logo-mask.png' %}');-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;"
+      role="img" aria-label="Flowly"></span>
