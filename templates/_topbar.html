@@ -11,7 +11,7 @@
     {# Marca (solo móvil; en escritorio está la sidebar) #}
     <a href="{% url 'home' %}" class="md:hidden flex items-center gap-2 font-display font-bold text-on-surface">
         <span class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center">
-            <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">deployed_code</span>
+            {% include 'partials/_logo_mark.html' with cls='w-[18px] h-[18px]' %}
         </span>
         Flowly
     </a>
@@ -29,7 +29,7 @@
             <div class="flex items-center justify-between mb-6">
                 <a href="{% url 'home' %}" class="flex items-center gap-3 min-w-0">
                     <span class="w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center shrink-0">
-                        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings:'FILL' 1;">deployed_code</span>
+                        {% include 'partials/_logo_mark.html' with cls='w-5 h-5' %}
                     </span>
                     <span class="leading-tight min-w-0">
                         <span class="block font-display font-bold text-on-surface truncate">Flowly</span>

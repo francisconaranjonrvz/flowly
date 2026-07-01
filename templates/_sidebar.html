@@ -4,7 +4,7 @@
     {# Marca #}
     <a href="{% url 'home' %}" class="flex items-center gap-3 px-2 mb-6">
         <span class="w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center shrink-0">
-            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings:'FILL' 1;">deployed_code</span>
+            {% include 'partials/_logo_mark.html' with cls='w-5 h-5' %}
         </span>
         <span class="leading-tight min-w-0">
             <span class="block font-display font-bold text-on-surface truncate">Flowly</span>

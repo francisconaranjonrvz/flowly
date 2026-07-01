@@ -5,7 +5,12 @@
 {% block body %}
 <main class="auth">
     <div class="auth__card">
-        <div class="auth__brand">Flowly</div>
+        <div class="auth__brand" style="display:flex;align-items:center;justify-content:center;gap:9px;">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-on-primary shrink-0">
+                {% include 'partials/_logo_mark.html' with cls='w-5 h-5' %}
+            </span>
+            <span>Flowly</span>
+        </div>
         <h1 class="auth__title">Iniciar sesión</h1>
         <p class="auth__subtitle">Accede a tus tableros y continúa donde lo dejaste.</p>
 
