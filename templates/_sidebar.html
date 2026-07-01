@@ -3,9 +3,7 @@
 
     {# Marca #}
     <a href="{% url 'home' %}" class="flex items-center gap-3 px-2 mb-6">
-        <span class="w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center shrink-0">
-            {% include 'partials/_logo_mark.html' with cls='w-5 h-5' %}
-        </span>
+        {% include 'partials/_logo_mark.html' with cls='h-8 w-auto shrink-0' %}
         <span class="leading-tight min-w-0">
             <span class="block font-display font-bold text-on-surface truncate">Flowly</span>
             <span class="block text-[11px] font-display tracking-wider text-on-surface-variant uppercase truncate">{{ active_organization.name|default:'Tu espacio' }}</span>

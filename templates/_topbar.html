@@ -10,9 +10,7 @@
 
     {# Marca (solo móvil; en escritorio está la sidebar) #}
     <a href="{% url 'home' %}" class="md:hidden flex items-center gap-2 font-display font-bold text-on-surface">
-        <span class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center">
-            {% include 'partials/_logo_mark.html' with cls='w-[18px] h-[18px]' %}
-        </span>
+        {% include 'partials/_logo_mark.html' with cls='h-7 w-auto' %}
         Flowly
     </a>
 
@@ -28,9 +26,7 @@
                class="fixed left-0 top-0 z-50 w-72 max-w-[85vw] h-screen flex flex-col bg-surface-container border-r border-outline-variant p-4">
             <div class="flex items-center justify-between mb-6">
                 <a href="{% url 'home' %}" class="flex items-center gap-3 min-w-0">
-                    <span class="w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center shrink-0">
-                        {% include 'partials/_logo_mark.html' with cls='w-5 h-5' %}
-                    </span>
+                    {% include 'partials/_logo_mark.html' with cls='h-8 w-auto shrink-0' %}
                     <span class="leading-tight min-w-0">
                         <span class="block font-display font-bold text-on-surface truncate">Flowly</span>
                         <span class="block text-[11px] font-display tracking-wider text-on-surface-variant uppercase truncate">{{ active_organization.name|default:'Tu espacio' }}</span>
