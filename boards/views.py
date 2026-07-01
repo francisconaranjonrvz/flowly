@@ -290,9 +290,17 @@ def column_move_view(request, board_id):
     if not user_can_access_board(request.user, board):
         return JsonResponse({'error': 'forbidden'}, status=403)
 
-    data = json.loads(request.body)
-    column_id = data.get('column_id')
-    target_order = int(data.get('order', 0))
+    from tasks.views import _to_int
+
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'error': 'bad request'}, status=400)
+    if not isinstance(data, dict):
+        return JsonResponse({'error': 'bad request'}, status=400)
+
+    column_id = _to_int(data.get('column_id'))
+    target_order = max(0, _to_int(data.get('order')))
 
     column = get_object_or_404(Column, pk=column_id, board_id=board_id)
     siblings = list(board.columns.order_by('order'))

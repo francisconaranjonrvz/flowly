@@ -28,8 +28,8 @@
                     if (cachedBrand) el.setAttribute('data-brand', cachedBrand);
                 }
 
-                var userMode = '{{ user_theme_mode }}';
-                var orgMode = '{{ org_theme_mode }}';
+                var userMode = '{{ user_theme_mode|escapejs }}';
+                var orgMode = '{{ org_theme_mode|escapejs }}';
                 var system = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
                 var stored = null;
                 try { stored = localStorage.getItem('flowly-theme'); } catch (e) {}

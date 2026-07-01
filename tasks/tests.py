@@ -163,3 +163,81 @@ class TaskDetailTests(TestCase):
         })
         self.card.refresh_from_db()
         self.assertFalse(self.card.assignees.filter(id=self.carol.id).exists())
+
+
+class InputHardeningTests(TestCase):
+    """Regresiones de la auditoría v7: labels acotadas al tablero en la
+    edición, e input malformado que no debe producir un 500."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.alice = User.objects.create_user(username='alice', password='alicepass1')
+        cls.board = Board.objects.create(name='Mío', owner=cls.alice)
+        cls.col = Column.objects.create(board=cls.board, title='To Do', order=0)
+        cls.card = Card.objects.create(column=cls.col, title='Tarea', order=0)
+        cls.label = Label.objects.create(board=cls.board, name='OK', color='#22c55e')
+        # Tablero ajeno con su etiqueta: nunca debe poder colgarse en cls.card.
+        cls.eve = User.objects.create_user(username='eve', password='evepass1234')
+        other_board = Board.objects.create(name='Ajeno', owner=cls.eve)
+        cls.foreign_label = Label.objects.create(
+            board=other_board, name='Ajena', color='#ef4444',
+        )
+
+    def _edit(self, **extra):
+        data = {'title': 'Tarea', 'description': '', 'priority': 0,
+                'column': self.col.id}
+        data.update(extra)
+        return self.client.post(
+            reverse('card-edit', args=[self.board.id, self.card.id]), data,
+        )
+
+    def test_edit_rejects_foreign_board_label(self):
+        self.client.login(username='alice', password='alicepass1')
+        resp = self._edit(labels=[self.foreign_label.id, self.label.id])
+        self.assertEqual(resp.status_code, 302)
+        ids = set(self.card.labels.values_list('id', flat=True))
+        self.assertEqual(ids, {self.label.id})
+
+    def test_edit_malformed_priority_and_date_do_not_500(self):
+        self.client.login(username='alice', password='alicepass1')
+        resp = self._edit(priority='abc', due_date='no-es-fecha')
+        self.assertEqual(resp.status_code, 302)
+        self.card.refresh_from_db()
+        self.assertEqual(self.card.priority, 0)
+        self.assertIsNone(self.card.due_date)
+
+    def test_create_malformed_priority_labels_assignees_do_not_500(self):
+        self.client.login(username='alice', password='alicepass1')
+        resp = self.client.post(reverse('card-create', args=[self.board.id]), {
+            'column': self.col.id, 'title': 'Robusta', 'priority': '  ',
+            'due_date': '32/13/2026', 'labels': ['x', str(self.label.id)],
+            'assignees': ['nope'],
+        })
+        self.assertEqual(resp.status_code, 302)
+        card = Card.objects.get(title='Robusta')
+        self.assertEqual(card.priority, 0)
+        self.assertIsNone(card.due_date)
+        self.assertEqual(set(card.labels.all()), {self.label})
+
+    def test_card_move_malformed_json_returns_400(self):
+        self.client.login(username='alice', password='alicepass1')
+        url = reverse('card-move', args=[self.board.id])
+        resp = self.client.post(url, 'no-json{', content_type='application/json')
+        self.assertEqual(resp.status_code, 400)
+        resp = self.client.post(url, '"un-string"', content_type='application/json')
+        self.assertEqual(resp.status_code, 400)
+
+    def test_card_move_non_numeric_ids_return_404_not_500(self):
+        self.client.login(username='alice', password='alicepass1')
+        url = reverse('card-move', args=[self.board.id])
+        resp = self.client.post(
+            url, '{"card_id": "abc", "column_id": "x", "order": "y"}',
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 404)
+
+    def test_column_move_malformed_json_returns_400(self):
+        self.client.login(username='alice', password='alicepass1')
+        url = reverse('column-move', args=[self.board.id])
+        resp = self.client.post(url, 'basura', content_type='application/json')
+        self.assertEqual(resp.status_code, 400)

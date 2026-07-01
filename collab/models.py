@@ -95,6 +95,17 @@ class Message(models.Model):
 
     class Meta:
         ordering = ['created']
+        constraints = [
+            # La BD garantiza el "exactamente uno" del docstring: un mensaje
+            # nunca puede quedar huérfano ni pertenecer a tablero Y canal.
+            models.CheckConstraint(
+                condition=(
+                    models.Q(board__isnull=False, channel__isnull=True)
+                    | models.Q(board__isnull=True, channel__isnull=False)
+                ),
+                name='message_board_xor_channel',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.author}: {self.body[:30]}'

@@ -2,6 +2,7 @@
 
 import json
 import re
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -21,6 +22,36 @@ from .models import Card, Comment, Subtask
 User = get_user_model()
 
 _MENTION_RE = re.compile(r'@(\w+)')
+
+
+def _to_int(value, default=0):
+    """int() tolerante: la basura en el POST no debe producir un 500."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _valid_ids(values):
+    """Ids numéricos de una lista del POST (descarta cualquier otra cosa)."""
+    ids = []
+    for value in values:
+        try:
+            ids.append(int(value))
+        except (TypeError, ValueError):
+            continue
+    return ids
+
+
+def _parse_date(value):
+    """'YYYY-MM-DD' -> date, o None si viene vacío o malformado."""
+    value = (value or '').strip()
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except ValueError:
+        return None
 
 
 def _board_members(board):
@@ -89,27 +120,25 @@ def card_create_view(request, board_id):
     last = column.cards.order_by('-order').first()
     order = (last.order + 1) if last else 0
 
-    due = request.POST.get('due_date', '').strip() or None
-
     card = Card.objects.create(
         column=column,
         title=title,
         description=request.POST.get('description', '').strip(),
-        priority=int(request.POST.get('priority', 0) or 0),
-        due_date=due,
+        priority=_to_int(request.POST.get('priority')),
+        due_date=_parse_date(request.POST.get('due_date')),
         order=order,
     )
 
     # Etiquetas (acotadas al tablero) y asignados (acotados a sus miembros).
-    label_ids = request.POST.getlist('labels')
+    label_ids = _valid_ids(request.POST.getlist('labels'))
     if label_ids:
         valid_labels = column.board.labels.filter(id__in=label_ids)
         card.labels.set(valid_labels)
 
-    assignee_ids = request.POST.getlist('assignees')
+    assignee_ids = _valid_ids(request.POST.getlist('assignees'))
     if assignee_ids:
         member_ids = set(_board_members(column.board).values_list('id', flat=True))
-        valid_assignees = [int(i) for i in assignee_ids if int(i) in member_ids]
+        valid_assignees = [i for i in assignee_ids if i in member_ids]
         if valid_assignees:
             card.assignees.set(valid_assignees)
             card.assignee = card.assignees.first()
@@ -134,22 +163,24 @@ def card_edit_view(request, board_id, card_id):
 
         card.title = title
         card.description = request.POST.get('description', '').strip()
-        card.priority = int(request.POST.get('priority', 0) or 0)
-        card.due_date = request.POST.get('due_date', '').strip() or None
+        card.priority = _to_int(request.POST.get('priority'))
+        card.due_date = _parse_date(request.POST.get('due_date'))
 
         new_col_id = request.POST.get('column')
         if new_col_id:
-            new_col = get_object_or_404(Column, pk=new_col_id, board=board)
+            new_col = get_object_or_404(Column, pk=_to_int(new_col_id), board=board)
             card.column = new_col
 
         card.save()
 
-        label_ids = request.POST.getlist('labels')
-        card.labels.set(label_ids)
+        # Etiquetas acotadas al tablero (mismo criterio que en la creación):
+        # ids de otros tableros se descartan en vez de colarse en la tarjeta.
+        label_ids = _valid_ids(request.POST.getlist('labels'))
+        card.labels.set(board.labels.filter(id__in=label_ids))
 
-        assignee_ids = request.POST.getlist('assignees')
+        assignee_ids = _valid_ids(request.POST.getlist('assignees'))
         member_ids = set(_board_members(board).values_list('id', flat=True))
-        valid_assignees = [int(i) for i in assignee_ids if int(i) in member_ids]
+        valid_assignees = [i for i in assignee_ids if i in member_ids]
         before = set(card.assignees.values_list('id', flat=True))
         card.assignees.set(valid_assignees)
         # Mantener el FK assignee sincronizado con el primer asignado (compat).
@@ -199,10 +230,16 @@ def card_move_view(request, board_id):
     if not user_can_access_board(request.user, board):
         return JsonResponse({'error': 'forbidden'}, status=403)
 
-    data = json.loads(request.body)
-    card_id = data.get('card_id')
-    column_id = data.get('column_id')
-    target_order = int(data.get('order', 0))
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'error': 'bad request'}, status=400)
+    if not isinstance(data, dict):
+        return JsonResponse({'error': 'bad request'}, status=400)
+
+    card_id = _to_int(data.get('card_id'))
+    column_id = _to_int(data.get('column_id'))
+    target_order = max(0, _to_int(data.get('order')))
 
     card = get_object_or_404(Card, pk=card_id, column__board_id=board_id)
     target_column = get_object_or_404(Column, pk=column_id, board_id=board_id)

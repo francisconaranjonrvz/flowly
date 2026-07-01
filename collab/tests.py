@@ -207,3 +207,33 @@ class SearchAndMyTasksTests(TestCase):
         self.assertEqual(ok.status_code, 200)
         outsider = User.objects.create_user(username='zoe', password='zoepass1234')
         self.assertEqual(self.client.get(reverse('equipo-member', args=[outsider.id])).status_code, 404)
+
+
+class MessageXorConstraintTests(TestCase):
+    """La BD garantiza que un mensaje pertenece a un tablero XOR un canal."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.a = User.objects.create_user(username='alice', password='alicepass1')
+        cls.org = Organization.objects.create(name='Acme')
+        cls.board = Board.objects.create(name='B', owner=cls.a, organization=cls.org)
+        cls.channel = Channel.objects.create(
+            organization=cls.org, name='general', slug='general', is_general=True,
+        )
+
+    def test_board_or_channel_alone_are_valid(self):
+        Message.objects.create(board=self.board, author=self.a, body='en tablero')
+        Message.objects.create(channel=self.channel, author=self.a, body='en canal')
+        self.assertEqual(Message.objects.count(), 2)
+
+    def test_both_set_is_rejected(self):
+        from django.db import IntegrityError, transaction
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Message.objects.create(
+                board=self.board, channel=self.channel, author=self.a, body='ambos',
+            )
+
+    def test_neither_set_is_rejected(self):
+        from django.db import IntegrityError, transaction
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Message.objects.create(author=self.a, body='huérfano')

@@ -302,3 +302,30 @@ class InviteAcceptTests(TestCase):
     def test_join_service_uses_invite_role(self):
         membership = join_organization(self.newcomer, self.invite)
         self.assertEqual(membership.role, 'member')
+
+
+class PresenceHeartbeatMiddlewareTests(TestCase):
+    """El middleware actualiza last_seen con throttle de 30s por sesión."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(username='beat', password='beatpass123')
+        org = Organization.objects.create(name='Latidos')
+        OrganizationMembership.objects.create(organization=org, user=cls.user)
+
+    def test_request_updates_last_seen(self):
+        self.client.login(username='beat', password='beatpass123')
+        self.assertIsNone(self.user.last_seen)
+        self.client.get(reverse('home'))
+        self.user.refresh_from_db()
+        self.assertIsNotNone(self.user.last_seen)
+
+    def test_second_request_within_throttle_does_not_update(self):
+        self.client.login(username='beat', password='beatpass123')
+        self.client.get(reverse('home'))
+        self.user.refresh_from_db()
+        first_seen = self.user.last_seen
+        # Segunda petición inmediata: el throttle (30s) evita otro UPDATE.
+        self.client.get(reverse('home'))
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.last_seen, first_seen)

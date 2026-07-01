@@ -3,6 +3,7 @@
 import re
 
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
 from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -107,10 +108,15 @@ def chat_send(request, board_id):
 # ---- Chat por canales (organización) ----
 
 def _ensure_general(org):
-    ch, _ = Channel.objects.get_or_create(
-        organization=org, is_general=True,
-        defaults={'name': 'general', 'slug': 'general'},
-    )
+    try:
+        ch, _ = Channel.objects.get_or_create(
+            organization=org, is_general=True,
+            defaults={'name': 'general', 'slug': 'general'},
+        )
+    except IntegrityError:
+        # Dos peticiones simultáneas pueden competir por crearlo; el
+        # UniqueConstraint (org, slug) deja ganar a una y aquí recuperamos.
+        ch = Channel.objects.get(organization=org, slug='general')
     return ch
 
 
@@ -171,10 +177,13 @@ def channel_create(request):
     name = (request.POST.get('name') or '').strip()[:50]
     if name:
         slug = slugify(name)[:60] or 'canal'
-        channel, _ = Channel.objects.get_or_create(
-            organization=org, slug=slug,
-            defaults={'name': name, 'created_by': request.user},
-        )
+        try:
+            channel, _ = Channel.objects.get_or_create(
+                organization=org, slug=slug,
+                defaults={'name': name, 'created_by': request.user},
+            )
+        except IntegrityError:
+            channel = Channel.objects.get(organization=org, slug=slug)
         return redirect('chat-channel', channel_id=channel.id)
     return redirect('chat')
 

@@ -22,6 +22,10 @@
 }
 
 .auth__brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     font-family: var(--font-display);
     font-weight: var(--font-weight-bold);
     font-size: var(--text-sm);

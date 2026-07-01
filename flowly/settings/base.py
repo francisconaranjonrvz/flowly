@@ -9,7 +9,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env()
 environ.Env.read_env(BASE_DIR / '.env')
 
-SECRET_KEY = env('DJANGO_SECRET_KEY', default='django-insecure-CHANGE-THIS-IN-PRODUCTION')
+# Sin default: cada entorno decide. development.py pone una clave de juguete;
+# production.py exige DJANGO_SECRET_KEY (falla el arranque si no está).
+SECRET_KEY = env('DJANGO_SECRET_KEY', default=None)
 
 DEBUG = env.bool('DJANGO_DEBUG', default=False)
 
