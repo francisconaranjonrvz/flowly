@@ -13,10 +13,12 @@
 </div>
 
 {# ---- Columnas ---- #}
-{# El #board se refresca por polling (tiempo real) sin recargar la página. Como
-   board.js delega los eventos de drag&drop sobre #board (que NO se reemplaza,
-   solo su contenido), el arrastre sigue funcionando tras cada swap. La guarda
-   de board.js cancela el tick mientras se arrastra o se escribe. #}
+{% comment %}
+El #board se refresca por polling (tiempo real) sin recargar la página. Como
+board.js delega los eventos de drag&drop sobre #board (que NO se reemplaza,
+solo su contenido), el arrastre sigue funcionando tras cada swap. La guarda
+de board.js cancela el tick mientras se arrastra o se escribe.
+{% endcomment %}
 <div class="flex-1 overflow-x-auto px-4 md:px-6 pt-1 pb-4 kanban-scroll">
 <main class="board flex gap-4 items-start h-full min-h-0" id="board"
       data-board-id="{{ board.id }}"
