@@ -1,7 +1,7 @@
 # Tests de perfil de usuario (Fase 5) + apariencia y avatar (Refinamientos v2).
 
 import tempfile
-from io import BytesIO
+from io import BytesIO, StringIO
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -130,3 +130,131 @@ class AvatarUploadTests(TestCase):
                 self.assertEqual(resp.status_code, 200)  # re-render con error
                 self.alice.refresh_from_db()
                 self.assertFalse(self.alice.avatar)
+
+
+class DemoSandboxTests(TestCase):
+    """Acceso demo sin credenciales: un sandbox aislado por visitante."""
+
+    def _enter_demo(self, client=None):
+        return (client or self.client).post(reverse('demo-login'))
+
+    def test_get_renders_without_creating(self):
+        resp = self.client.get(reverse('demo-login'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'noindex')
+        self.assertFalse(User.objects.filter(is_demo=True).exists())
+
+    def test_post_creates_seeded_sandbox_and_logs_in(self):
+        from boards.models import Board
+        from collab.models import Message, Notification
+
+        resp = self._enter_demo()
+        visitor = User.objects.get(is_demo=True, first_name='Invitado')
+        board = Board.objects.filter(owner=visitor).order_by('id').first()
+        self.assertRedirects(resp, reverse('board-detail', args=[board.id]))
+        self.assertEqual(int(self.client.session['_auth_user_id']), visitor.pk)
+        self.assertFalse(visitor.has_usable_password())
+
+        self.assertEqual(Board.objects.filter(owner=visitor).count(), 2)
+        self.assertEqual(board.organization.name, 'Flowly Demo')
+        mates = User.objects.filter(username__startswith=f'{visitor.username}-')
+        self.assertEqual(mates.count(), 2)
+        self.assertTrue(all(m.is_demo for m in mates))
+        self.assertTrue(Message.objects.filter(board=board).exists())
+        self.assertEqual(Notification.objects.filter(recipient=visitor).count(), 2)
+
+        page = self.client.get(reverse('board-detail', args=[board.id]))
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, 'Estás en una')
+
+    def test_visitors_are_isolated(self):
+        from boards.models import Board
+
+        self._enter_demo()
+        first = User.objects.get(is_demo=True, first_name='Invitado')
+        other = self.client_class()
+        self._enter_demo(other)
+        second = User.objects.filter(is_demo=True, first_name='Invitado').exclude(pk=first.pk).get()
+
+        first_board = Board.objects.filter(owner=first).first()
+        second_board = Board.objects.filter(owner=second).first()
+        self.assertNotEqual(first_board.organization_id, second_board.organization_id)
+        resp = other.get(reverse('board-detail', args=[first_board.id]))
+        self.assertIn(resp.status_code, (403, 404))
+
+    def test_returning_visitor_reuses_sandbox(self):
+        self._enter_demo()
+        self.client.post(reverse('logout'))
+        self._enter_demo()
+        self.assertEqual(User.objects.filter(is_demo=True, first_name='Invitado').count(), 1)
+
+    def test_authenticated_user_is_not_switched_to_demo(self):
+        User.objects.create_user(username='real', password='realpass123')
+        self.client.login(username='real', password='realpass123')
+        resp = self._enter_demo()
+        self.assertRedirects(resp, reverse('home'))
+        self.assertFalse(User.objects.filter(is_demo=True).exists())
+
+    def test_demo_user_cannot_change_email(self):
+        self._enter_demo()
+        visitor = User.objects.get(is_demo=True, first_name='Invitado')
+        self.client.post(reverse('perfil'), {
+            'first_name': 'Hack', 'last_name': '', 'email': 'someone@real.com', 'bio': '',
+        })
+        visitor.refresh_from_db()
+        self.assertEqual(visitor.first_name, 'Hack')
+        self.assertEqual(visitor.email, '')
+
+    def test_cleanup_removes_expired_sandboxes_only(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from boards.demo import cleanup_expired_demos, create_demo_sandbox
+        from boards.models import Board
+        from organizations.models import Organization
+
+        real = User.objects.create_user(username='real', password='realpass123')
+        old_user, old_org, _ = create_demo_sandbox()
+        fresh_user, fresh_org, _ = create_demo_sandbox()
+        User.objects.filter(username__startswith=old_user.username).update(
+            date_joined=timezone.now() - timedelta(hours=25),
+        )
+
+        deleted = cleanup_expired_demos()
+
+        self.assertEqual(deleted, 3)  # visitante + 2 compañeros
+        self.assertFalse(User.objects.filter(username__startswith=old_user.username).exists())
+        self.assertFalse(Organization.objects.filter(pk=old_org.pk).exists())
+        self.assertFalse(Board.objects.filter(organization_id=old_org.pk).exists())
+        self.assertTrue(User.objects.filter(pk=fresh_user.pk).exists())
+        self.assertTrue(Organization.objects.filter(pk=fresh_org.pk).exists())
+        self.assertTrue(User.objects.filter(pk=real.pk).exists())
+
+    def test_cleanup_recycles_oldest_over_cap(self):
+        from datetime import timedelta
+
+        from boards.demo import cleanup_expired_demos, create_demo_sandbox
+
+        oldest, _, _ = create_demo_sandbox()
+        newer, _, _ = create_demo_sandbox()
+        User.objects.filter(username__startswith=newer.username).update(
+            date_joined=oldest.date_joined + timedelta(seconds=1),
+        )
+
+        cleanup_expired_demos(max_active=1)
+
+        self.assertFalse(User.objects.filter(username__startswith=oldest.username).exists())
+        self.assertEqual(User.objects.filter(username__startswith=newer.username).count(), 3)
+
+    def test_seed_demo_command_still_works(self):
+        from django.core.management import call_command
+
+        from boards.models import Board
+
+        call_command('seed_demo', stdout=StringIO())
+        demo = User.objects.get(username='demo')
+        self.assertFalse(demo.is_demo)
+        self.assertTrue(demo.check_password('demo12345'))
+        self.assertEqual(Board.objects.filter(owner=demo).count(), 2)
+        self.assertTrue(User.objects.filter(username='ana').exists())

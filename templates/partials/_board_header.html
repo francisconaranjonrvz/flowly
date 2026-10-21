@@ -38,7 +38,7 @@ Requiere: board, members, total_cards, current_view.
                             </span>
                             <button @click="chat = false" class="w-8 h-8 rounded-lg hover:bg-surface-variant flex items-center justify-center text-on-surface-variant shrink-0"><span class="material-symbols-outlined text-[20px]">close</span></button>
                         </header>
-                        <div id="board-chat-messages" hx-get="{% url 'chat-messages' board_id=board.id %}" hx-trigger="load, every 4s"
+                        <div id="board-chat-messages" hx-get="{% url 'chat-messages' board_id=board.id %}" hx-trigger="load, every 4s [!document.hidden]"
                              hx-swap="innerHTML" hx-on::after-settle="this.scrollTop = this.scrollHeight"
                              class="flex-1 overflow-y-auto p-4 space-y-3">
                             <p class="text-center text-xs text-on-surface-variant">Cargando…</p>

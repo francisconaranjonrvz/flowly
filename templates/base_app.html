@@ -6,6 +6,18 @@
 
 <div class="md:pl-64 min-h-screen flex flex-col">
     {% include '_topbar.html' %}
+    {% if user.is_demo %}
+    <div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-1.5 text-xs bg-surface-container-high text-on-surface-variant border-b border-outline-variant">
+        <span class="material-symbols-outlined text-[16px] text-accent" aria-hidden="true">science</span>
+        <span>Estás en una <strong class="text-on-surface">demo</strong>: espacio privado con datos de ejemplo que se borra en 24&nbsp;h.</span>
+        {# Sale de la demo y va al registro (register redirige a home si hay sesión) #}
+        <form method="post" action="{% url 'logout' %}" class="inline">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'register' %}">
+            <button type="submit" class="font-semibold text-accent hover:underline">Crear cuenta gratis</button>
+        </form>
+    </div>
+    {% endif %}
     <main class="flex-1 min-w-0 pb-20 md:pb-0 {% block main_class %}p-4 md:p-6{% endblock %}">
         {% block content %}{% endblock %}
     </main>
@@ -14,5 +26,5 @@
 {% include '_bottomnav.html' %}
 
 {# Heartbeat de presencia: mantiene last_seen fresco sin navegar #}
-<div hx-get="{% url 'presence-ping' %}" hx-trigger="every 40s" hx-swap="none" class="hidden" aria-hidden="true"></div>
+<div hx-get="{% url 'presence-ping' %}" hx-trigger="every 40s [!document.hidden]" hx-swap="none" class="hidden" aria-hidden="true"></div>
 {% endblock %}

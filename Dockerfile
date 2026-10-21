@@ -70,4 +70,4 @@ USER app
 EXPOSE 8000
 
 ENTRYPOINT ["/bin/sh", "/app/docker-entrypoint.sh"]
-CMD ["sh", "-c", "exec gunicorn flowly.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers ${GUNICORN_WORKERS:-1} --access-logfile -"]
+CMD ["sh", "-c", "exec gunicorn flowly.wsgi:application --bind 0.0.0.0:${PORT:-8000} --worker-class gthread --workers ${GUNICORN_WORKERS:-2} --threads ${GUNICORN_THREADS:-4} --timeout ${GUNICORN_TIMEOUT:-60} --access-logfile -"]

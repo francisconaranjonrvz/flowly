@@ -36,6 +36,13 @@ class ProfileForm(forms.ModelForm):
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Un visitante demo no puede reservar emails ajenos (bloquearía el
+        # registro real de esa persona mientras viva el sandbox).
+        if self.instance.is_demo:
+            self.fields['email'].disabled = True
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email and User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():

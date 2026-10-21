@@ -10,7 +10,7 @@
             <div class="pc-head"><span class="pc-eye pc-eye--l"></span><span class="pc-eye pc-eye--r"></span></div>
             <div class="pc-body"><span class="pc-arm pc-arm--l"></span><span class="pc-arm pc-arm--r"></span></div>
         </div>
-        <div class="seat__desk"><span class="seat__monitor">{{ u.username|first|upper }}</span></div>
+        <div class="seat__desk"><span class="seat__monitor">{{ u.initial }}</span></div>
     </div>
     <span class="seat__tag">
         <span class="seat__dot office-dot--{{ u.presence }}{% if u.status_state == 'busy' and u.presence == 'online' %} office-dot--busy{% endif %}"></span>

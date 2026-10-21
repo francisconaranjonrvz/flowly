@@ -34,6 +34,17 @@
             <button type="submit" class="auth__submit">Entrar</button>
         </form>
 
+        <div class="auth__divider"><span>o</span></div>
+
+        {# Acceso demo sin credenciales: crea un sandbox propio del visitante #}
+        <form method="post" action="{% url 'demo-login' %}">
+            {% csrf_token %}
+            <button type="submit" class="auth__demo">
+                Explorar la demo sin registrarse
+            </button>
+        </form>
+        <p class="auth__hint">Espacio de prueba privado con datos de ejemplo. Se borra en 24 h.</p>
+
         <p class="auth__footer">¿No tienes cuenta? <a href="{% url 'register' %}">Regístrate</a></p>
     </div>
 </main>

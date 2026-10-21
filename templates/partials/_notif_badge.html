@@ -1,5 +1,5 @@
 {% comment %}Badge de la campana; se auto-refresca por polling.{% endcomment %}
-<span id="notif-badge" hx-get="{% url 'notifications-badge' %}" hx-trigger="every 60s" hx-swap="outerHTML">
+<span id="notif-badge" hx-get="{% url 'notifications-badge' %}" hx-trigger="every 60s [!document.hidden]" hx-swap="outerHTML">
     {% if unread_count %}
     <span class="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center pointer-events-none">{{ unread_count }}</span>
     {% endif %}

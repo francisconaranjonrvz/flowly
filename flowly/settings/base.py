@@ -81,6 +81,9 @@ DATABASES = {
     ),
 }
 DATABASES['default']['CONN_MAX_AGE'] = 60
+# Con conexiones persistentes, comprobar que siguen vivas antes de reusarlas
+# (p.ej. tras un reinicio de Postgres) en vez de fallar la petición.
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
 
 # --- Autenticación ---
@@ -129,3 +132,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+
+# --- Logging ---
+# Todo a stdout (lo recogen Docker/Railway). Sin esto, con DEBUG=False Django
+# envía los tracebacks de errores 500 solo a mail_admins (sin ADMINS
+# configurados) y no queda rastro en los logs.
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {'format': '{levelname} {asctime} {name} {message}', 'style': '{'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'simple'},
+    },
+    'root': {'handlers': ['console'], 'level': 'WARNING'},
+    'loggers': {
+        'django.request': {'handlers': ['console'], 'level': 'ERROR', 'propagate': False},
+    },
+}

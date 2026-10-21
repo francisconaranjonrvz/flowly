@@ -39,7 +39,7 @@
                 <span class="material-symbols-outlined text-[18px] text-on-surface-variant">tag</span>
                 <span class="font-display font-bold text-on-surface">{{ channel.name }}</span>
             </header>
-            <div id="chat-messages" hx-get="{% url 'channel-messages' channel.id %}" hx-trigger="load, every 4s"
+            <div id="chat-messages" hx-get="{% url 'channel-messages' channel.id %}" hx-trigger="load, every 4s [!document.hidden]"
                  hx-swap="innerHTML" hx-on::after-settle="this.scrollTop = this.scrollHeight"
                  class="flex-1 overflow-y-auto p-4 space-y-3">
                 {% include 'partials/_chat_messages.html' %}

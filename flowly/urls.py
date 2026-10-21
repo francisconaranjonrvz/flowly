@@ -58,9 +58,9 @@ from organizations.views import (
     organization_create_view,
     org_switch_view,
 )
-from users.views import appearance_update_view, perfil_view, register_view
+from users.views import appearance_update_view, demo_login_view, perfil_view, register_view
 
-from .health import liveness, readiness
+from .health import favicon, liveness, readiness
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -68,6 +68,9 @@ urlpatterns = [
     # Healthchecks para Docker
     path('healthz', liveness, name='healthz'),
     path('readyz', readiness, name='readyz'),
+
+    # Navegadores y bots piden /favicon.ico aunque el HTML declare otro icono.
+    path('favicon.ico', favicon),
 
 
     # Autenticación con sesiones
@@ -77,6 +80,7 @@ urlpatterns = [
     ), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('register/', register_view, name='register'),
+    path('demo/', demo_login_view, name='demo-login'),
 
     # Organizaciones
     path('org/switch/', org_switch_view, name='org-switch'),

@@ -61,6 +61,9 @@ class User(AbstractUser):
     char_hair = models.PositiveSmallIntegerField(null=True, blank=True)
     char_hair_style = models.PositiveSmallIntegerField(null=True, blank=True)
     char_shirt = models.PositiveSmallIntegerField(null=True, blank=True)
+    # Visitante del acceso demo sin credenciales (o compañero de su sandbox):
+    # sin contraseña utilizable y borrado automático al caducar (boards/demo.py).
+    is_demo = models.BooleanField(default=False, db_index=True)
 
     class Meta:
         ordering = ['username']
@@ -74,6 +77,11 @@ class User(AbstractUser):
         """Devuelve el nombre completo o el username si no tiene."""
         full = super().get_full_name()
         return full if full.strip() else self.username
+
+    @property
+    def initial(self):
+        """Inicial para avatares sin imagen: la del nombre, o la del username."""
+        return (self.first_name.strip() or self.username)[:1].upper()
 
     @property
     def presence(self):

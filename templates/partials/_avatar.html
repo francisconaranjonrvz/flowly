@@ -11,5 +11,5 @@ Muestra <img> si el usuario tiene avatar; si no, las iniciales.
      class="{{ size }} {{ ring }} rounded-full object-cover bg-surface-variant shrink-0">
 {% else %}
 <span title="{{ profile_user.get_full_name_or_username }}"
-      class="{{ size }} {{ ring }} rounded-full bg-surface-variant text-on-surface flex items-center justify-center font-display font-bold shrink-0">{{ profile_user.username|first|upper }}</span>
+      class="{{ size }} {{ ring }} rounded-full bg-surface-variant text-on-surface flex items-center justify-center font-display font-bold shrink-0">{{ profile_user.initial }}</span>
 {% endif %}

@@ -23,7 +23,7 @@ de board.js cancela el tick mientras se arrastra o se escribe.
 <main class="board flex gap-4 items-start h-full min-h-0" id="board"
       data-board-id="{{ board.id }}"
       data-first-column-id="{% if first_column %}{{ first_column.id }}{% endif %}"
-      hx-get="{% url 'board-columns' board_id=board.id %}" hx-trigger="every 6s, refreshBoard" hx-swap="innerHTML">
+      hx-get="{% url 'board-columns' board_id=board.id %}" hx-trigger="every 6s [!document.hidden], refreshBoard" hx-swap="innerHTML">
     {% include 'partials/_board_columns.html' %}
 </main>
 </div>

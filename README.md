@@ -2,14 +2,14 @@
 
 **A multi-tenant project management SaaS** (Trello/Asana-style) built solo, end-to-end, on Django — with a differentiator of its own: **The Office**, a live 8-bit room where you see your teammates working at their desks in real time.
 
-[![Live Demo](https://img.shields.io/badge/demo-live-6366f1?style=flat-square)](https://flowly-production-7876.up.railway.app)
+[![Live Demo](https://img.shields.io/badge/demo-live-6366f1?style=flat-square)](https://flowly-production-7876.up.railway.app/demo/)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![Django](https://img.shields.io/badge/Django-4.2-092E20?style=flat-square&logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![Django](https://img.shields.io/badge/Django-6.0-092E20?style=flat-square&logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Tests](https://img.shields.io/badge/tests-94%20passing-22c55e?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/tests-114%20passing-22c55e?style=flat-square)](#testing)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
-**[→ Try the live demo](https://flowly-production-7876.up.railway.app)** — user `demo` / password `demo12345`
+**[→ Try the live demo](https://flowly-production-7876.up.railway.app/demo/)** — one click, no sign-up: you get a private sandbox with sample boards, teammates and chat (auto-deleted after 24 h).
 
 ---
 
@@ -48,7 +48,7 @@ It's a solo project, built and iterated in structured phases with a clear paper 
 - **Theming as data, not per-brand CSS files**: brand + light/dark mode are CSS custom-property sets selected via `data-brand`/`data-theme` attributes, with an anti-FOUC boot script and per-user overrides layered over per-org defaults.
 - **Token-driven design system**: no hardcoded colors in templates — semantic Tailwind tokens (`bg-surface`, `text-on-primary`, …) map to CSS variables, so a new brand is a token block, not a redesign.
 - **Server-rendered, HTMX/Alpine islands** — no SPA, no build-heavy JS toolchain (Tailwind ships as a standalone binary, no Node in the image), fast TTFB, small attack surface.
-- **94 tests** covering permissions/tenant isolation, view flows, and model behavior; every feature phase shipped behind `manage.py test` passing before merge.
+- **114 tests** covering permissions/tenant isolation, view flows, and model behavior; every feature phase shipped behind `manage.py test` passing before merge.
 
 ## Features
 
@@ -63,13 +63,13 @@ It's a solo project, built and iterated in structured phases with a clear paper 
 
 | Layer | Choice |
 |---|---|
-| Backend | Django 4.2, PostgreSQL |
+| Backend | Django 6.0, PostgreSQL |
 | Frontend | Django templates + **HTMX** + **Alpine.js** (server-rendered, no SPA) |
 | Styling | **Tailwind CSS** (standalone binary, no Node toolchain) + a CSS custom-property design-token system |
 | "Real-time" | HTMX polling (chat ~4s, notifications ~60s, kanban ~6s) with interaction guards — no WebSockets/Redis needed |
 | Auth & sessions | Django's built-in auth, session-based active-organization switching |
 | Deployment | Docker → Railway (gunicorn + WhiteNoise), healthchecked (`/healthz`, `/readyz`) |
-| Tests | Django `TestCase`, 94 tests |
+| Tests | Django `TestCase`, 114 tests |
 
 ## Architecture at a glance
 
@@ -128,7 +128,7 @@ The repo ships with `Dockerfile`, `docker-entrypoint.sh` and `railway.json`. The
 python manage.py test
 ```
 
-94 tests, covering tenant isolation, permissions, and core view/model behavior.
+114 tests, covering tenant isolation, permissions, and core view/model behavior.
 
 ## About the author
 

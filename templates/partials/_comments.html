@@ -41,7 +41,7 @@
           hx-on::after-request="this.reset()"
           class="flex items-start gap-2.5">
         {% csrf_token %}
-        <span class="shrink-0 w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-[11px] font-display font-bold">{{ request.user.username|first|upper }}</span>
+        <span class="shrink-0 w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-[11px] font-display font-bold">{{ request.user.initial }}</span>
         <div class="flex-1 min-w-0">
             <textarea name="body" rows="2" placeholder="Escribe un comentario..." required
                       class="w-full bg-surface-variant rounded-lg px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary resize-y"></textarea>

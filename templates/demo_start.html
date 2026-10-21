@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Flowly — Demo{% endblock %}
+
+{% block extra_css %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block body %}
+<main class="auth">
+    <div class="auth__card">
+        <div class="auth__brand">
+            {% include 'partials/_logo_mark.html' with cls='h-9 w-auto shrink-0' %}
+            <span>Flowly</span>
+        </div>
+        <h1 class="auth__title">Preparando tu demo…</h1>
+        <p class="auth__subtitle">Creamos un espacio de trabajo solo para ti, con tableros, equipo y chat de ejemplo. Se borra solo en 24 h.</p>
+
+        {# Se auto-envía por POST: un GET (p.ej. la previsualización de un enlace) no crea nada #}
+        <form class="auth__form" method="post" action="{% url 'demo-login' %}" id="demo-form">
+            {% csrf_token %}
+            <button type="submit" class="auth__submit">Entrar a la demo</button>
+        </form>
+
+        <p class="auth__footer">¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión</a></p>
+    </div>
+</main>
+<script>
+    (function () {
+        var form = document.getElementById('demo-form');
+        form.querySelector('button').disabled = true;
+        form.submit();
+    })();
+</script>
+{% endblock %}
